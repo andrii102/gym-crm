@@ -1,0 +1,30 @@
+package com.dre.gymapp.config;
+
+import com.dre.gymapp.model.Trainee;
+import com.dre.gymapp.model.Trainer;
+import com.dre.gymapp.model.Training;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+@ComponentScan(basePackages = "com.dre.gymapp")
+public class AppConfig {
+    @Bean
+    public Map<String, Trainee> traineeMap(){
+        return new HashMap<>();
+    }
+
+    @Bean
+    public Map<String, Training> trainingMap(){
+        return new HashMap<>();
+    }
+
+    @Bean
+    public Map<String, Trainer> trainerMap(){
+        return new HashMap<>();
+    }
+}

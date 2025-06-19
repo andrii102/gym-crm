@@ -1,5 +1,10 @@
 package com.dre.gymapp.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class User {
     String firstName;
     String lastName;
