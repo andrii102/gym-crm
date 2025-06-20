@@ -11,4 +11,9 @@ public class User {
     String username;
     String password;
     boolean isActive;
-}
+
+    public User(String firstName, String lastName){
+        this.firstName = firstName;
+        this.lastName = lastName;
+        isActive = true;
+    }}
