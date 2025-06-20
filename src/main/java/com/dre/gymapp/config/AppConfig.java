@@ -13,18 +13,22 @@ import java.util.Map;
 @Configuration
 @ComponentScan(basePackages = "com.dre.gymapp")
 public class AppConfig {
+    // Bean for storing Trainee objects with user IDs as keys
     @Bean
-    public Map<String, Trainee> traineeMap(){
+    public Map<String, Trainee> traineeMap() {
         return new HashMap<>();
     }
 
+    // Bean for storing Training objects with training names as keys
     @Bean
-    public Map<String, Training> trainingMap(){
+    public Map<String, Training> trainingMap() {
         return new HashMap<>();
     }
 
+    // Bean for storing Trainer objects with user IDs as keys 
     @Bean
-    public Map<String, Trainer> trainerMap(){
+    public Map<String, Trainer> trainerMap() {
         return new HashMap<>();
     }
 }
+
