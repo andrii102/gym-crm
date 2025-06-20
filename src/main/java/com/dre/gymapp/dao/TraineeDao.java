@@ -52,7 +52,9 @@ public class TraineeDao implements GenericDao<Trainee, String> {
         traineeMap.remove(s);
     }
 
+    // Check if a username is taken
     public boolean usernameExists(String username) {
-        return traineeMap.containsKey(username);
+        return traineeMap.values().stream()
+                .anyMatch(trainee -> trainee.getUsername().equals(username));
     }
 }

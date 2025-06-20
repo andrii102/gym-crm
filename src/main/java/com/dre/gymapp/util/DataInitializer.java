@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,15 +20,20 @@ import java.util.function.Consumer;
 @Component
 public class DataInitializer implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
-
-    @Value("${trainees.file}")
     private String traineesFilePath;
-
-    @Value("${trainers.file}")
     private String trainersFilePath;
-
     private TraineeService traineeService;
     private TrainerService trainerService;
+
+    @Value("${trainees.file}")
+    public void setTraineesFilePath(String traineesFilePath) {
+        this.traineesFilePath = traineesFilePath;
+    }
+
+    @Value("${trainers.file}")
+    public void setTrainersFilePath(String trainersFilePath) {
+        this.trainersFilePath = trainersFilePath;
+    }
 
     @Autowired
     public void setTraineeService(TraineeService traineeService) {

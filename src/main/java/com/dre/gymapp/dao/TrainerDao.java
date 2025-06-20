@@ -52,8 +52,10 @@ public class TrainerDao implements GenericDao<Trainer, String> {
         throw new UnsupportedOperationException();
     }
 
+    // Check if a username is taken
     public boolean usernameExists(String username) {
-        return trainerMap.containsKey(username);
+        return trainerMap.values().stream()
+                .anyMatch(trainer -> trainer.getUsername().equals(username));
     }
 
 }
