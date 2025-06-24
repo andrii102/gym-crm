@@ -3,7 +3,7 @@ package com.dre.gymapp.service;
 import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainer;
-import com.dre.gymapp.util.CredentialsGenerator;
+import com.dre.gymapp.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,12 @@ import java.util.List;
 public class TrainerService {
     private static final Logger logger = LoggerFactory.getLogger(TrainerService.class);
     private TrainerDao trainerDao;
-    private CredentialsGenerator credentialsGenerator;
+    private UserService userService;
+
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
 
     // Sets the trainer DAO through dependency injection
     @Autowired
@@ -23,24 +28,19 @@ public class TrainerService {
         this.trainerDao = trainerDao;
     }
 
-    // Sets the Credential Generator through dependency injection
-    @Autowired
-    public void setCredentialsGenerator(CredentialsGenerator credentialsGenerator) {
-        this.credentialsGenerator = credentialsGenerator;
-    }
-
     // Creates and saves a new trainer
-    public Trainer createTrainer(Trainer trainer) {
-        logger.info("Creating new trainer with ID: {}", trainer.getUserId());
+    public Trainer createTrainer(String firstName, String lastName) {
+        logger.info("Creating new trainer");
 
-        String username = credentialsGenerator.generateUsername(trainer.getFirstName(), trainer.getLastName(),
-                trainerDao::usernameExists );
-        String password = credentialsGenerator.generatePassword();
+        User user = userService.createUser(firstName, lastName);
 
-        trainer.setUsername(username);
-        trainer.setPassword(password);
+        Trainer trainer = new Trainer();
+        trainer.setUser(user);
+        trainerDao.save(trainer);
 
-        return trainerDao.save(trainer);
+        logger.info("Trainer created successfully");
+
+        return trainer;
     }
 
     // Gets a trainer by their ID, throws exception if not found
@@ -62,7 +62,7 @@ public class TrainerService {
 
     // Updates an existing trainer record
     public Trainer updateTrainer(Trainer trainer) {
-        logger.info("Updating trainer with ID: {}", trainer.getUserId());
+        logger.info("Updating trainer with ID: {}", trainer.getId());
         return trainerDao.update(trainer);
     }
 }

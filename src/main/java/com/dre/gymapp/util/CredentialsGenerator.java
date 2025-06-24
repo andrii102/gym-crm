@@ -2,17 +2,17 @@ package com.dre.gymapp.util;
 
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Random;
-import java.util.function.Predicate;
 
 @Component
 public class CredentialsGenerator {
 
-    public String generateUsername(String firstName, String lastName, Predicate<String> isTaken) {
+    public String generateUsername(String firstName, String lastName, List<String> takenUsernames) {
         String base = firstName.toLowerCase() + "." + lastName.toLowerCase();
         int suffix = 1;
         String username = base;
-        while (isTaken.test(username)){
+        while (takenUsernames.contains(username)){
             username = base + suffix++;
         }
         return username;

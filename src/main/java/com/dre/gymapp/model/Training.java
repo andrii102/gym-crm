@@ -1,5 +1,6 @@
 package com.dre.gymapp.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,18 +8,35 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
+@Entity
 public class Training {
-    String traineeId;
-    String trainerId;
+    @Id
+    Long id;
+    @ManyToOne
+    @JoinColumn(name = "trainee_id")
+    Trainee trainee;
+    @ManyToOne
+    @JoinColumn(name = "trainer_id")
+    Trainer trainer;
+    @Column(nullable = false)
     String trainingName;
+    @ManyToOne
+    @JoinColumn(name = "training_type")
     TrainingType trainingType;
+    @Column(nullable = false)
     LocalDate trainingDate;
+    @Column(nullable = false)
     Integer trainingDuration;
 
-    public Training(String traineeId, String trainerId, String trainingName, TrainingType trainingType,
-                    LocalDate trainingDate, Integer trainingDuration) {
-        this.traineeId = traineeId;
-        this.trainerId = trainerId;
+    public Training() {
+
+    }
+
+    public Training(Long id, Trainee trainee, Trainer trainer, String trainingName,
+                    TrainingType trainingType, LocalDate trainingDate, Integer trainingDuration) {
+        this.id = id;
+        this.trainee = trainee;
+        this.trainer = trainer;
         this.trainingName = trainingName;
         this.trainingType = trainingType;
         this.trainingDate = trainingDate;
@@ -28,8 +46,9 @@ public class Training {
     @Override
     public String toString() {
         return "Training{" +
-                "traineeId='" + traineeId + '\'' +
-                ", trainerId='" + trainerId + '\'' +
+                "id=" + id +
+                ", trainee=" + trainee +
+                ", trainer=" + trainer +
                 ", trainingName='" + trainingName + '\'' +
                 ", trainingType=" + trainingType +
                 ", trainingDate=" + trainingDate +

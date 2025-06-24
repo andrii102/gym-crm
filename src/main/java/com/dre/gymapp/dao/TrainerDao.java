@@ -1,61 +1,62 @@
 package com.dre.gymapp.dao;
 
 import com.dre.gymapp.model.Trainer;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public class TrainerDao implements GenericDao<Trainer, String> {
 
-    // Map to store trainers with their IDs as keys
-    private Map<String, Trainer> trainerMap;
+    // EntityManager for handling persistence operations
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    @Autowired
-    public void setTrainerMap(Map<String, Trainer> trainerMap) {
-        this.trainerMap = trainerMap;
-    }
-
-    // Find trainer by ID, returns Optional which may or may not contain the trainer
+    // Finds a trainer by their ID in the database
     @Override
     public Optional<Trainer> findById(String s) {
-        return Optional.ofNullable(trainerMap.get(s));
+        return Optional.of(entityManager.find(Trainer.class, s));
     }
 
-    // Get a list of all trainers in the map
+    // Retrieves all trainers from the database
     @Override
     public List<Trainer> findAll() {
-        return List.of(trainerMap.values().toArray(new Trainer[0]));
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Trainer> query = cb.createQuery(Trainer.class);
+        Root<Trainer> root = query.from(Trainer.class);
+
+        return entityManager.createQuery(query.select(root)).getResultList();
     }
 
-    // Save a new trainer to the map
+    // Persists a new trainer entity to the database
     @Override
-    public Trainer save(Trainer entity) {
-        return trainerMap.put(entity.getUserId(), entity);
+    @Transactional
+    public void save(Trainer entity) {
+        entityManager.persist(entity);
     }
 
-    // Update the existing trainer if ID exists in map
+    // Updates an existing trainer in the database if found
     @Override
+    @Transactional
     public Trainer update(Trainer entity) {
-        if (trainerMap.containsKey(entity.getUserId())) {
-            return trainerMap.put(entity.getUserId(), entity);
+        if (entityManager.find(Trainer.class, entity.getId()) != null) {
+            return entityManager.merge(entity);
         }
-        return null;
+        throw new IllegalArgumentException("Trainer with ID " + entity.getId() + " not found");
     }
 
-    // Delete operation not supported for trainers
+    // Delete operation is not supported for trainers
     @Override
     public void deleteById(String s) {
         throw new UnsupportedOperationException();
-    }
-
-    // Check if a username is taken
-    public boolean usernameExists(String username) {
-        return trainerMap.values().stream()
-                .anyMatch(trainer -> trainer.getUsername().equals(username));
     }
 
 }

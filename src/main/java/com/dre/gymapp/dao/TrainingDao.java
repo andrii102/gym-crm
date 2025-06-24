@@ -1,49 +1,55 @@
 package com.dre.gymapp.dao;
 
 import com.dre.gymapp.model.Training;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public class TrainingDao implements GenericDao<Training, String> {
 
-    // Map to store trainings with training names as keys
-    private Map<String, Training> trainingMap;
+    // EntityManager for handling persistence operations
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    @Autowired
-    public void setTrainingMap(Map<String, Training> trainingMap) {
-        this.trainingMap = trainingMap;
-    }
-
-    // Find training by name, returns Optional which may or may not contain the training
+    // Finds a training by ID in the database
     @Override
     public Optional<Training> findById(String s) {
-        return Optional.ofNullable(trainingMap.get(s));
+        return Optional.of(entityManager.find(Training.class, s));
     }
 
-    // Get a list of all trainings in the map
+    // Retrieves all trainings from the database using criteria API
     @Override
     public List<Training> findAll() {
-        return List.of(trainingMap.values().toArray(new Training[0]));
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Training> query = cb.createQuery(Training.class);
+        Root<Training> root = query.from(Training.class);
+
+        return entityManager.createQuery(query.select(root)).getResultList();
     }
 
-    // Save new training to the map using training name as key
+    // Persists a new training entity to the database
     @Override
-    public Training save(Training entity) {
-        return trainingMap.put(entity.getTrainingName(), entity);
+    @Transactional
+    public void save(Training entity) {
+        entityManager.persist(entity);
     }
 
-    // Update operation isn't supported for trainings
+    // Updates are not supported for training entities
     @Override
     public Training update(Training entity) {
         throw new UnsupportedOperationException();
     }
 
-    // Delete operation not supported for trainings
+    // Deleting trainings is not supported 
     @Override
     public void deleteById(String s) {
         throw new UnsupportedOperationException();

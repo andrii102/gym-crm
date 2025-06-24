@@ -1,11 +1,14 @@
 package com.dre.gymapp.model;
 
-public enum TrainingType {
-    STRENGTH,
-    YOGA,
-    CALISTHENICS,
-    CARDIO,
-    HYPERTROPHY,
-    BALANCE,
-    RECOVERY
+import jakarta.persistence.*;
+
+@Entity
+public class TrainingType {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+    @Column(nullable = false, unique = true)
+    String trainingTypeName;
+
+    public TrainingType() {}
 }

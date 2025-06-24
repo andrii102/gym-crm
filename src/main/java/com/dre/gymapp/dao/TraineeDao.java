@@ -1,60 +1,70 @@
 package com.dre.gymapp.dao;
 
+import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public class TraineeDao implements GenericDao<Trainee, String> {
+public class TraineeDao implements GenericDao<Trainee, Long> {
 
-    // Map to store trainees with their IDs as keys
-    private Map<String, Trainee> traineeMap;
-
-    @Autowired
-    public void setTraineeMap(Map<String, Trainee> traineeMap) {
-        this.traineeMap = traineeMap;
-    }
+    // Entity manager for database operations
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // Find trainee by ID, returns Optional which may or may not contain the trainee
     @Override
-    public Optional<Trainee> findById(String s) {
-        return Optional.ofNullable(traineeMap.get(s));
+    public Optional<Trainee> findById(Long aLong) {
+        return Optional.of(entityManager.find(Trainee.class, aLong));
     }
 
-    // Get a list of all trainees in the map
+    // Get a list of all trainees
     @Override
     public List<Trainee> findAll() {
-        return List.of(traineeMap.values().toArray(new Trainee[0]));
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Trainee> query = cb.createQuery(Trainee.class);
+        Root<Trainee> root = query.from(Trainee.class);
+
+        TypedQuery<Trainee> typedQuery = entityManager.createQuery(query.select(root));
+        return typedQuery.getResultList();
     }
 
-    // Save new trainee to the map
+    // Save a new trainee
     @Override
-    public Trainee save(Trainee entity) {
-        return traineeMap.put(entity.getUserId(), entity);
+    @Transactional
+    public void save(Trainee entity) {
+        entityManager.persist(entity);
     }
 
-    // Update an existing trainee if ID exists in a map
+    // Update an existing trainee if it exists in a table
     @Override
+    @Transactional
     public Trainee update(Trainee entity) {
-        if (traineeMap.containsKey(entity.getUserId())) {
-            return traineeMap.put(entity.getUserId(), entity);
+        if (entityManager.find(Trainee.class, entity.getId()) != null) {
+            return entityManager.merge(entity);
         }
-        return null;
+        throw new NotFoundException("Trainee with ID " + entity.getId() + " not found");
     }
 
-    // Delete trainee by ID from the map
+    // Delete trainee by ID from the table
     @Override
-    public void deleteById(String s) {
-        traineeMap.remove(s);
+    @Transactional
+    public void deleteById(Long aLong) {
+        Trainee trainee = entityManager.find(Trainee.class, aLong);
+        if (trainee == null) {
+            throw new NotFoundException("Trainee with ID " + aLong + " not found");
+        }
+        entityManager.remove(trainee);
     }
 
-    // Check if a username is taken
-    public boolean usernameExists(String username) {
-        return traineeMap.values().stream()
-                .anyMatch(trainee -> trainee.getUsername().equals(username));
-    }
 }

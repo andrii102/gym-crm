@@ -26,7 +26,8 @@ public class TrainingService {
     // Creates and saves a new training
     public Training createTraining(Training training) {
         logger.info("Creating new training with ID: {}", training.getTrainingName());
-        return trainingDao.save(training);
+        trainingDao.save(training);
+        return training;
     }
 
     // Gets a training by its ID, throws exception if not found

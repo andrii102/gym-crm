@@ -1,32 +1,26 @@
 package com.dre.gymapp.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class Trainer extends User{
+@Entity
+public class Trainer {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+    @ManyToOne
+    @JoinColumn(name = "training_type")
     TrainingType specialization;
-    String userId;
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "user_id")
+    User user;
 
-    public Trainer(String userId, String firstName, String lastName) {
-        super(firstName, lastName);
-        this.userId = userId;
+    public Trainer() {
+
     }
 
-    public Trainer(String userId, String firstName, String lastName, TrainingType specialization) {
-        super(firstName, lastName);
-        this.specialization = specialization;
-    }
-
-    @Override
-    public String toString() {
-        return "Trainee{" +
-                "userId='" + getUserId() + '\'' +
-                ", firstName='" + getFirstName() + '\'' +
-                ", lastName='" + getLastName() + '\'' +
-                ", username='" + getUsername() + '\'' +
-                ", password='" + getPassword() + '\'' +
-                '}';
-    }
 }
