@@ -3,6 +3,7 @@ package com.dre.gymapp.model;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "trainingType")
 public class TrainingType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

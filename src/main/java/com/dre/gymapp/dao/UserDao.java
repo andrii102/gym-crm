@@ -14,16 +14,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class UserDao implements GenericDao<User, Long>{
+public class UserDao implements GenericDao<User, Long> {
+    // EntityManager for handling persistence operations
     @PersistenceContext
     private EntityManager entityManager;
 
 
+    // Finds a user by their ID in the database
     @Override
     public Optional<User> findById(Long aLong) {
         return Optional.of(entityManager.find(User.class, aLong));
     }
 
+    // Retrieves all users from the database
     @Override
     public List<User> findAll() {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -32,21 +35,24 @@ public class UserDao implements GenericDao<User, Long>{
         return entityManager.createQuery(query.select(root)).getResultList();
     }
 
+    // Persists a new user entity to the database
     @Override
     @Transactional
     public void save(User entity) {
         entityManager.persist(entity);
     }
 
+    // Updates an existing user in the database if found
     @Override
     public User update(User entity) {
         User user = entityManager.find(User.class, entity.getId());
         if (user != null) {
             return entityManager.merge(entity);
         }
-        throw  new NotFoundException("User with ID " + entity.getId() + " not found");
+        throw new NotFoundException("User with ID " + entity.getId() + " not found");
     }
 
+    // Deletes a user by their ID from the database
     @Override
     public void deleteById(Long aLong) {
         User user = entityManager.find(User.class, aLong);
@@ -64,5 +70,15 @@ public class UserDao implements GenericDao<User, Long>{
         query.select(root.get("username")).where(cb.like(root.get("username"), username + "%"));
 
         return entityManager.createQuery(query).getResultList();
+    }
+
+    // Finds a user by their username in the database
+    public Optional<User> findByUsername(String username) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<User> query = cb.createQuery(User.class);
+        Root<User> root = query.from(User.class);
+        return entityManager.createQuery(query.select(root)
+                        .where(cb.equal(root.get("username"), username)))
+                .getResultList().stream().findFirst();
     }
 }

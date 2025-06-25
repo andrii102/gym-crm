@@ -12,5 +12,9 @@ public class GymApp {
 
         GymFacade gymFacade = context.getBean(GymFacade.class);
         gymFacade.printAllTrainees();
+//        gymFacade.printAllTrainers();
+//        gymFacade.printAllTrainings();
+//        gymFacade.printAllUsers();
+
     }
 }

@@ -5,20 +5,27 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
 @Entity
 public class Trainee {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
     LocalDate dateOfBirth;
+
     String address;
+
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")
     User user;
+
+    @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Training> trainings = new ArrayList<>();
 
     public Trainee() {
     }

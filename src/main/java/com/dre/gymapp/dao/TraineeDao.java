@@ -9,7 +9,6 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -65,6 +64,15 @@ public class TraineeDao implements GenericDao<Trainee, Long> {
             throw new NotFoundException("Trainee with ID " + aLong + " not found");
         }
         entityManager.remove(trainee);
+    }
+
+    // Delete trainee by username from the table
+    @Transactional
+    public void deleteTraineeByUsername(String username){
+        Trainee trainee = entityManager.find(Trainee.class, username);
+        if (trainee == null) {
+            throw new NotFoundException("Trainee with username " + username + " not found");
+        }
     }
 
 }

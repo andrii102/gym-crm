@@ -6,7 +6,6 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class TrainerDao implements GenericDao<Trainer, String> {
+public class TrainerDao implements GenericDao<Trainer, Long> {
 
     // EntityManager for handling persistence operations
     @PersistenceContext
@@ -22,8 +21,8 @@ public class TrainerDao implements GenericDao<Trainer, String> {
 
     // Finds a trainer by their ID in the database
     @Override
-    public Optional<Trainer> findById(String s) {
-        return Optional.of(entityManager.find(Trainer.class, s));
+    public Optional<Trainer> findById(Long aLong) {
+        return Optional.of(entityManager.find(Trainer.class, aLong));
     }
 
     // Retrieves all trainers from the database
@@ -55,7 +54,7 @@ public class TrainerDao implements GenericDao<Trainer, String> {
 
     // Delete operation is not supported for trainers
     @Override
-    public void deleteById(String s) {
+    public void deleteById(Long aLong) {
         throw new UnsupportedOperationException();
     }
 

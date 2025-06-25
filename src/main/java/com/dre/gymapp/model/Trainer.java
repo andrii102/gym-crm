@@ -9,11 +9,12 @@ import lombok.Setter;
 @Entity
 public class Trainer {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
     @ManyToOne
     @JoinColumn(name = "training_type")
     TrainingType specialization;
+
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")

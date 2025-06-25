@@ -12,14 +12,19 @@ public class User {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     Long id;
+
     @Column(nullable = false)
     String firstName;
+
     @Column(nullable = false)
     String lastName;
-    @Column(nullable = false)
+
+    @Column(nullable = false, unique = true)
     String username;
+
     @Column(nullable = false)
     String password;
+
     @Column(nullable = false)
     boolean isActive;
 

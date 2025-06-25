@@ -11,20 +11,27 @@ import java.time.LocalDate;
 @Entity
 public class Training {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
     @ManyToOne
     @JoinColumn(name = "trainee_id")
     Trainee trainee;
+
     @ManyToOne
     @JoinColumn(name = "trainer_id")
     Trainer trainer;
+
     @Column(nullable = false)
     String trainingName;
+
     @ManyToOne
     @JoinColumn(name = "training_type")
     TrainingType trainingType;
+
     @Column(nullable = false)
     LocalDate trainingDate;
+
     @Column(nullable = false)
     Integer trainingDuration;
 

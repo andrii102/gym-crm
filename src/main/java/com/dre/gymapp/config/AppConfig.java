@@ -40,6 +40,9 @@ public class AppConfig {
         jpaProperties.put("hibernate.dialect", env.getProperty("db.dialect"));
         jpaProperties.put("hibernate.show_sql", env.getProperty("db.show_sql"));
         jpaProperties.put("hibernate.hbm2ddl.auto", env.getProperty("db.hbm2ddl.auto"));
+        jpaProperties.put("hibernate.hbm2ddl.import_files", env.getProperty("db.hbm2ddl.import_files"));
+        jpaProperties.put("hibernate.hbm2ddl.import_files_sql_extractor",
+                "org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor");
         return jpaProperties;
     }
 

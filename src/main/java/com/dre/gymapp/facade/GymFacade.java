@@ -41,7 +41,7 @@ public class GymFacade {
     }
 
     public void printAllTrainees() {
-        List<Trainee> trainees = traineeService.getAllTrainees();
+        List<Trainee> trainees = traineeService.getAllTrainees("john.doe", "pass123");
         System.out.println("All Trainees:");
         if (trainees.isEmpty()) {
             System.out.println("No trainees found");
@@ -51,7 +51,7 @@ public class GymFacade {
     }
 
     public void printAllTrainers() {
-        List<Trainer> trainers = trainerService.getAllTrainers();
+        List<Trainer> trainers = trainerService.getAllTrainers("john.doe", "pass123");
         System.out.println("All Trainers:");
         if (trainers.isEmpty()) {
             System.out.println("No trainers found");

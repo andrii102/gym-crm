@@ -1,6 +1,8 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.UserDao;
+import com.dre.gymapp.exception.NotFoundException;
+import com.dre.gymapp.exception.UnauthorizedException;
 import com.dre.gymapp.model.User;
 import com.dre.gymapp.util.CredentialsGenerator;
 import org.slf4j.Logger;
@@ -16,16 +18,30 @@ public class UserService {
     private UserDao userDao;
     private CredentialsGenerator credentialsGenerator;
 
+    // Setter injection for UserDao
     @Autowired
-    public void setUserDao(UserDao userDao){
+    public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
     }
 
+    // Setter injection for CredentialsGenerator
     @Autowired
     public void setCredentialsGenerator(CredentialsGenerator credentialsGenerator) {
         this.credentialsGenerator = credentialsGenerator;
     }
 
+    // Authenticates user with username and password
+    public User authenticateUser(String username, String password) {
+        User user = getUserByUsername(username);
+        if (user.getPassword().equals(password)) {
+            return user;
+        } else {
+            throw new UnauthorizedException("Invalid credentials");
+
+        }
+    }
+
+    // Creates a new user with the given first and last name
     public User createUser(String firstName, String lastName) {
         logger.info("Creating new user");
         User user = new User(firstName, lastName);
@@ -41,6 +57,18 @@ public class UserService {
         return user;
     }
 
+    // Updates an existing user
+    public User updateUser(User user) {
+        logger.info("Updating user with ID: {}", user.getId());
+        try {
+            return userDao.update(user);
+        } catch (NotFoundException e) {
+            logger.warn("User with ID {} not found: {}", user.getId(), e.getMessage());
+            throw e;
+        }
+    }
+
+    // Gets a user by their ID
     public User getUserById(Long id) {
         logger.info("Getting user with ID: {}", id);
         try {
@@ -51,6 +79,18 @@ public class UserService {
         }
     }
 
+    // Gets a user by their username
+    public User getUserByUsername(String username) {
+        logger.info("Getting user with username: {}", username);
+        try {
+            return userDao.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        } catch (IllegalArgumentException e) {
+            logger.warn("User with username {} not found: {}", username, e.getMessage());
+            throw e;
+        }
+    }
+
+    // Gets all users in the system
     public List<User> getAllUsers() {
         logger.info("Getting all users");
         return userDao.findAll();

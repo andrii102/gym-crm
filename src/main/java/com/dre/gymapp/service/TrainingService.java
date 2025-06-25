@@ -31,7 +31,7 @@ public class TrainingService {
     }
 
     // Gets a training by its ID, throws exception if not found
-    public Training getTrainingById(String id) {
+    public Training getTrainingById(Long id) {
         logger.info("Getting training with ID: {}", id);
         try {
             return trainingDao.findById(id).orElseThrow(() -> new NotFoundException("Training not found"));
