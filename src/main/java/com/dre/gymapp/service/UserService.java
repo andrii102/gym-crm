@@ -68,6 +68,12 @@ public class UserService {
         }
     }
 
+    // Changes user's password
+    public void changePassword(User user, String newPassword) {
+        user.setPassword(newPassword);
+        userDao.update(user);
+    }
+
     // Gets a user by their ID
     public User getUserById(Long id) {
         logger.info("Getting user with ID: {}", id);
@@ -94,5 +100,22 @@ public class UserService {
     public List<User> getAllUsers() {
         logger.info("Getting all users");
         return userDao.findAll();
+    }
+
+    // Deletes 
+    public void deleteUserById(Long id) {
+        logger.info("Deleting user with ID: {}", id);
+        try {
+            userDao.deleteById(id);
+        } catch (NotFoundException e) {
+            logger.warn("User with ID {} not found: {}", id, e.getMessage());
+            throw e;
+        }
+    }
+
+    // Activates/De-activates user
+    public void setActive(User user, boolean active) {
+        user.setActive(active);
+        userDao.update(user);
     }
 }

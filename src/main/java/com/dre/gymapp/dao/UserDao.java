@@ -44,16 +44,17 @@ public class UserDao implements GenericDao<User, Long> {
 
     // Updates an existing user in the database if found
     @Override
+    @Transactional
     public User update(User entity) {
-        User user = entityManager.find(User.class, entity.getId());
-        if (user != null) {
-            return entityManager.merge(entity);
+        if (entity.getId() != null) {
+         throw new IllegalArgumentException("User ID cannot be null for update");
         }
-        throw new NotFoundException("User with ID " + entity.getId() + " not found");
+        return entityManager.merge(entity);
     }
 
     // Deletes a user by their ID from the database
     @Override
+    @Transactional
     public void deleteById(Long aLong) {
         User user = entityManager.find(User.class, aLong);
         if (user == null) {

@@ -8,8 +8,8 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -64,15 +64,6 @@ public class TraineeDao implements GenericDao<Trainee, Long> {
             throw new NotFoundException("Trainee with ID " + aLong + " not found");
         }
         entityManager.remove(trainee);
-    }
-
-    // Delete trainee by username from the table
-    @Transactional
-    public void deleteTraineeByUsername(String username){
-        Trainee trainee = entityManager.find(Trainee.class, username);
-        if (trainee == null) {
-            throw new NotFoundException("Trainee with username " + username + " not found");
-        }
     }
 
 }

@@ -4,6 +4,7 @@ import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dto.TraineeProfileUpdateRequest;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
+import com.dre.gymapp.model.Trainer;
 import com.dre.gymapp.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,14 @@ public class TraineeService {
         return traineeDao.update(trainee);
     }
 
+    // Change password
+    public void changePassword(String username, String password, String newPassword) {
+        logger.info("Changing password for trainee with username: {}", username);
+        User user = userService.authenticateUser(username, password);
+        userService.changePassword(user, newPassword);
+        logger.info("Password changed successfully");
+    }
+
     // Gets a trainee by their ID, throws exception if not found
     public Trainee getTraineeById(String username, String password, Long id) {
         logger.info("Getting trainee with ID: {}", id);
@@ -81,9 +90,11 @@ public class TraineeService {
     }
 
     // Deletes a trainee by their username
-    public void deleteTraineeByUsername(String username){
-        logger.info("Deleting trainee with username: {}", username);
-        traineeDao.deleteTraineeByUsername(username);
+    public void deleteTraineeByUsername(String username, String password, String traineeUsername){
+        logger.info("Deleting trainee with username: {}", traineeUsername);
+        User user = userService.authenticateUser(username, password);
+        userService.deleteUserById(user.getId());
+        traineeDao.deleteById(user.getId());
     }
 
     // Deletes a trainee by their ID
@@ -96,5 +107,30 @@ public class TraineeService {
             logger.warn("Trainee with ID {} not found: {}", id, e.getMessage());
             throw e;
         }
+    }
+
+    // Adds trainer to the list of trainers
+    public void addTrainer(String username, String password,Trainee trainee, Trainer trainer) {
+        logger.info("Adding trainer to trainee with username: {}", username);
+        User user = userService.authenticateUser(username, password);
+        trainee.getTrainers().add(trainer);
+        traineeDao.update(trainee);
+        logger.info("Trainer added successfully");
+    }
+
+    // Activates trainee
+    public void activateTrainee(String username, String password) {
+        logger.info("Activating trainee with username: {}", username);
+        User user = userService.authenticateUser(username, password);
+        userService.setActive(user, true);
+        logger.info("Trainee activated successfully");
+    }
+
+    // De-activates trainee
+    public void deactivateTrainee(String username, String password) {
+        logger.info("Deactivating trainee with username: {}", username);
+        User user = userService.authenticateUser(username, password);
+        userService.setActive(user, false);
+        logger.info("Trainee deactivated successfully");
     }
 }

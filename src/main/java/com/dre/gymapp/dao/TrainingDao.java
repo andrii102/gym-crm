@@ -1,14 +1,15 @@
 package com.dre.gymapp.dao;
 
 import com.dre.gymapp.model.Training;
+import com.dre.gymapp.model.TrainingType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,5 +53,33 @@ public class TrainingDao implements GenericDao<Training, Long> {
     @Override
     public void deleteById(Long aLong) {
         throw new UnsupportedOperationException();
+    }
+
+    // Finds trainings by parameters
+    public List<Training> findTrainingsByParams(String trainerUsername, String traineeUsername,
+                                                LocalDate fromDate, LocalDate toDate, String trainingTypeName) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Training> query = cb.createQuery(Training.class);
+        Root<Training> root = query.from(Training.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (trainerUsername != null && !trainerUsername.isEmpty()) {
+            predicates.add(cb.equal(root.get("trainer").get("user").get("username"), trainerUsername));
+        }
+        if (traineeUsername != null && !traineeUsername.isEmpty()) {
+            predicates.add(cb.equal(root.get("trainee").get("user").get("username"), traineeUsername));
+        }
+        if (fromDate != null && toDate != null) {
+            predicates.add(cb.between(root.get("date"), fromDate, toDate));
+        }
+        if (trainingTypeName != null && !trainingTypeName.isEmpty()) {
+            Join<Training, TrainingType> trainingTypeJoin = root.join("trainingType");
+            predicates.add(cb.equal(cb.lower(trainingTypeJoin.get("trainingTypeName")), trainingTypeName.toLowerCase()));
+        }
+
+        query.where(cb.and(predicates.toArray(new Predicate[0])));
+
+        return entityManager.createQuery(query).getResultList();
     }
 }

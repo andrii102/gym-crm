@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -45,6 +46,13 @@ public class TrainingService {
     public List<Training> getAllTrainings() {
         logger.info("Getting all trainings");
         return trainingDao.findAll();
+    }
+
+    // Returns list of trainings by parameters
+    public List<Training> getTrainerTrainings(String trainerUsername, String traineeUsername, LocalDate fromDate,
+                                              LocalDate toDate, String trainingTypeName) {
+        logger.info("Getting Trainer's trainings");
+        return  trainingDao.findTrainingsByParams(trainerUsername, traineeUsername, fromDate, toDate, trainingTypeName);
     }
 }
 

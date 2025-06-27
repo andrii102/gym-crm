@@ -24,4 +24,12 @@ public class Trainer {
 
     }
 
+    @Override
+    public String toString() {
+        return "Trainer{" +
+                "specialization=" + specialization.trainingTypeName +
+                ", id=" + id +
+                ", userId=" + user.getId() +
+                '}';
+    }
 }

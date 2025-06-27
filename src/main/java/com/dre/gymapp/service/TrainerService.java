@@ -44,6 +44,13 @@ public class TrainerService {
         return trainer;
     }
 
+    public void changePassword(String username, String password, String newPassword) {
+        logger.info("Changing password for trainer with username: {}", username);
+        User user = userService.authenticateUser(username, password);
+        userService.changePassword(user, newPassword);
+        logger.info("Password changed successfully");
+    }
+
     // Gets a trainer by their ID, throws exception if not found
     public Trainer getTrainerById(String username, String password, Long id) {
         logger.info("Getting trainer with ID: {}", id);
@@ -77,5 +84,27 @@ public class TrainerService {
 
         userService.updateUser(user);
         return trainerDao.update(trainer);
+    }
+
+    // Returns list with unassigned trainers
+    public List<Trainer> findUnassignedTrainers(){
+        logger.info("Finding unassigned trainers");
+        return trainerDao.findUnassignedTrainers();
+    }
+
+    // Activates trainer
+    public void activateTrainer(String username, String password) {
+        logger.info("Activating trainer with username: {}", username);
+        User user = userService.authenticateUser(username, password);
+        userService.setActive(user, true);
+        logger.info("Trainer activated successfully");
+    }
+
+    // De-activates trainer
+    public void deactivateTrainer(String username, String password) {
+        logger.info("Deactivating trainer with username: {}", username);
+        User user = userService.authenticateUser(username, password);
+        userService.setActive(user, false);
+        logger.info("Trainer deactivated successfully");
     }
 }

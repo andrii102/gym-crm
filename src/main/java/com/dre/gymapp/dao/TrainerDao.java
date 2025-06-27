@@ -58,4 +58,11 @@ public class TrainerDao implements GenericDao<Trainer, Long> {
         throw new UnsupportedOperationException();
     }
 
+    // Returns list of unassigned trainers
+    public List<Trainer> findUnassignedTrainers() {
+        String sql = "SELECT * FROM trainer WHERE user_id NOT IN (SELECT trainer_id FROM trainee_trainer)";
+        List<?> rawList = entityManager.createNativeQuery(sql, Trainer.class).getResultList();
+        return (List<Trainer>) rawList;
+    }
+
 }
