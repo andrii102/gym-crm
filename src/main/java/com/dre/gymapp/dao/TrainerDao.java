@@ -1,5 +1,6 @@
 package com.dre.gymapp.dao;
 
+import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -22,7 +23,7 @@ public class TrainerDao implements GenericDao<Trainer, Long> {
     // Finds a trainer by their ID in the database
     @Override
     public Optional<Trainer> findById(Long aLong) {
-        return Optional.of(entityManager.find(Trainer.class, aLong));
+        return Optional.ofNullable(entityManager.find(Trainer.class, aLong));
     }
 
     // Retrieves all trainers from the database
@@ -49,7 +50,7 @@ public class TrainerDao implements GenericDao<Trainer, Long> {
         if (entityManager.find(Trainer.class, entity.getId()) != null) {
             return entityManager.merge(entity);
         }
-        throw new IllegalArgumentException("Trainer with ID " + entity.getId() + " not found");
+        throw new NotFoundException("Trainer with ID " + entity.getId() + " not found");
     }
 
     // Delete operation is not supported for trainers

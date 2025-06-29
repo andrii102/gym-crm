@@ -1,101 +1,131 @@
 package com.dre.gymapp.dao;
 
+import com.dre.gymapp.config.H2TestConfig;
+import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
+import com.dre.gymapp.model.User;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = H2TestConfig.class)
+@Transactional
 class TraineeDaoTest {
 
+    @Autowired
     private TraineeDao traineeDao;
-    private Map<String, Trainee> traineeMap;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    private User testUser;
+    private Trainee testTrainee;
+    private static final String TEST_USERNAME = "test.user";
+    private static final String TEST_ADDRESS = "123 Main St";
+    private static final Long NON_EXISTENT_ID = 9999L;
 
     @BeforeEach
     void setUp() {
-        traineeMap = new HashMap<>();
-        traineeDao = new TraineeDao();
-        traineeDao.setTraineeMap(traineeMap);
+        testUser = new User("Test", "User");
+        testUser.setUsername(TEST_USERNAME);
+        testUser.setPassword("<PASSWORD>");
+        entityManager.persist(testUser);
+
+        testTrainee = new Trainee(LocalDate.of(2025, 1, 1), TEST_ADDRESS);
+        testTrainee.setUser(testUser);
+        entityManager.persist(testTrainee);
+
+        entityManager.flush();
     }
 
     @Test
-    void saveTest() {
-        Trainee trainee = new Trainee("T1", "John", "Doe");
+    void save_ShouldPersistNewTrainee() {
+        User user = new User("Test", "User");
+        user.setUsername("new.user1");
+        user.setPassword("<PASSWORD>");
+        Trainee trainee = new Trainee(LocalDate.of(2025, 1, 1), TEST_ADDRESS);
+        trainee.setUser(user);
+
         traineeDao.save(trainee);
-        
-        assertEquals(trainee, traineeMap.get("T1"));
+        entityManager.flush();
+        entityManager.clear();
+
+        Trainee persisted = entityManager.find(Trainee.class, trainee.getId());
+
+        assertAll(
+                () -> assertNotNull(persisted),
+                () -> assertEquals(TEST_ADDRESS, persisted.getAddress())
+
+        );
     }
 
     @Test
-    void findByIdTest() {
-        Trainee trainee = new Trainee("T2", "Alice", "Smith");
-        traineeMap.put("T2", trainee);
+    void findById_ShouldReturnTrainee() {
+        Optional<Trainee> trainee = traineeDao.findById(testTrainee.getId());
 
-        Optional<Trainee> result = traineeDao.findById("T2");
-
-        assertTrue(result.isPresent());
-        assertEquals("Alice", result.get().getFirstName());
+        assertTrue(trainee.isPresent());
+        assertEquals("123 Main St", trainee.get().getAddress());
+        assertEquals(TEST_USERNAME, trainee.get().getUser().getUsername());
     }
 
     @Test
-    void findAllTest() {
-        Trainee t1 = new Trainee("T3", "Tom", "Brown");
-        Trainee t2 = new Trainee("T4", "Sara", "Jones");
-        traineeMap.put("T3", t1);
-        traineeMap.put("T4", t2);
-
-        List<Trainee> all = traineeDao.findAll();
-
-        assertEquals(2, all.size());
-        assertTrue(all.contains(t1));
-        assertTrue(all.contains(t2));
+    public void findById_ShouldReturnEmptyOptional() {
+        Optional<Trainee> trainee = traineeDao.findById(NON_EXISTENT_ID);
+        assertFalse(trainee.isPresent());
     }
 
     @Test
-    void updateExistingTraineeTest() {
-        Trainee old = new Trainee("T5", "Bob", "White");
-        traineeMap.put("T5", old);
-
-        Trainee updated = new Trainee("T5", "Bob", "Black");
-        Trainee result = traineeDao.update(updated);
-
-        assertEquals(old, result); // returns previous value
-        assertEquals("Black", traineeMap.get("T5").getLastName());
+    void findAll_ShouldReturnTrainees() {
+        List<Trainee> trainees = traineeDao.findAll();
+        assertFalse(trainees.isEmpty());
     }
 
     @Test
-    void updateNonExistingTraineeTest() {
-        Trainee newTrainee = new Trainee("T6", "New", "Guy");
+    void update_ShouldUpdateExistingTrainee() {
+        Trainee trainee = traineeDao.findById(testTrainee.getId()).orElseThrow();
 
-        Trainee result = traineeDao.update(newTrainee);
+        String newAddress = "456 New St";
+        trainee.setAddress(newAddress);
 
-        assertNull(result);
-        assertFalse(traineeMap.containsKey("T6"));
+        traineeDao.update(trainee);
+        entityManager.flush();
+        entityManager.clear();
+
+        Trainee dbTrainee = entityManager.find(Trainee.class, testTrainee.getId());
+        assertEquals(newAddress, dbTrainee.getAddress());
+
     }
 
     @Test
-    void deleteByIdTest() {
-        Trainee t = new Trainee("T7", "Delete", "Me");
-        traineeMap.put("T7", t);
+    void update_ShouldThrowForNewTrainee() {
+        Trainee trainee = new Trainee(LocalDate.of(2025, 1, 1), TEST_ADDRESS);
+        trainee.setUser(testUser);
 
-        traineeDao.deleteById("T7");
-
-        assertFalse(traineeMap.containsKey("T7"));
+        assertThrows(NotFoundException.class, () -> traineeDao.update(trainee));
     }
 
     @Test
-    void usernameExistsTrueTest() {
-        Trainee t = new Trainee("T8", "User", "Name");
-        t.setUsername("User.Name");
-        traineeMap.put("T8", t);
-
-        assertTrue(traineeDao.usernameExists("User.Name"));
+    void deleteById_ShouldRemoveTrainee() {
+        traineeDao.deleteById(testTrainee.getId());
+        assertFalse(traineeDao.findById(testTrainee.getId()).isPresent());
     }
 
     @Test
-    void usernameExistsFalseTest() {
-        assertFalse(traineeDao.usernameExists("Ghost.User"));
+    public void deleteById_ShouldThrowForNonExistentTrainee() {
+        assertThrows(NotFoundException.class, () -> traineeDao.deleteById(NON_EXISTENT_ID));
     }
+
 }

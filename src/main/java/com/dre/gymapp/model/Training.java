@@ -39,9 +39,8 @@ public class Training {
 
     }
 
-    public Training(Long id, Trainee trainee, Trainer trainer, String trainingName,
+    public Training(Trainee trainee, Trainer trainer, String trainingName,
                     TrainingType trainingType, LocalDate trainingDate, Integer trainingDuration) {
-        this.id = id;
         this.trainee = trainee;
         this.trainer = trainer;
         this.trainingName = trainingName;

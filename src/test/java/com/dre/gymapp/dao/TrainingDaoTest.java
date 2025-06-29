@@ -1,90 +1,146 @@
 package com.dre.gymapp.dao;
 
-import com.dre.gymapp.model.Training;
-import com.dre.gymapp.model.TrainingType;
+import com.dre.gymapp.config.H2TestConfig;
+import com.dre.gymapp.model.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TrainingDaoTest {
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = H2TestConfig.class)
+@Transactional
+public class TrainingDaoTest {
 
+    @Autowired
     private TrainingDao trainingDao;
-    private Map<String, Training> trainingMap;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    private User testUserTrainee;
+    private User testUserTrainer;
+    private Trainer testTrainer;
+    private TrainingType testTrainingType;
+    private Trainee testTrainee;
+    private Training testTraining;
+    private static final String TEST_TRAINEE_USERNAME = "trainee.user";
+    private static final String TEST_TRAINER_USERNAME = "trainer.user";
+    private static final String TEST_TRAINING_NAME = "Test Training";
+    private static final String TRAINING_TYPE = "CARDIO";
+    private static final LocalDate TEST_DATE = LocalDate.of(2025, 1, 1);
+    private static final Integer TEST_DURATION = 60;
+    private static final Long NON_EXISTENT_ID = 9999L;
 
     @BeforeEach
-    void setUp() {
-        trainingMap = new HashMap<>();
-        trainingDao = new TrainingDao();
-        trainingDao.setTrainingMap(trainingMap);
+    public void setUp(){
+        testUserTrainee = new User("Trainee", "User");
+        testUserTrainee.setUsername(TEST_TRAINEE_USERNAME);
+        testUserTrainee.setPassword("<PASSWORD>");
+        entityManager.persist(testUserTrainee);
+
+        testUserTrainer = new User("Trainer", "User");
+        testUserTrainer.setUsername(TEST_TRAINER_USERNAME);
+        testUserTrainer.setPassword("<PASSWORD>");
+        entityManager.persist(testUserTrainer);
+
+        testTrainingType = new TrainingType(TRAINING_TYPE);
+        entityManager.persist(testTrainingType);
+
+        testTrainer = new Trainer(testTrainingType, testUserTrainer);
+        entityManager.persist(testTrainer);
+
+        testTrainee = new Trainee(null, null);
+        testTrainee.setUser(testUserTrainee);
+        entityManager.persist(testTrainee);
+
+        testTraining = new Training(testTrainee, testTrainer, TEST_TRAINING_NAME,
+                testTrainingType, TEST_DATE, TEST_DURATION);
+        entityManager.persist(testTraining);
+
+        entityManager.flush();
     }
 
-    private Training createSampleTraining(String name) {
-        return new Training(
-                "Trainee01",
-                "Trainer01",
-                name,
-                TrainingType.CARDIO,
-                LocalDate.of(2025, 6, 20),
-                60
+    @Test
+    public void findById_ShouldReturnTraining() {
+        Optional<Training> training = trainingDao.findById(testTraining.getId());
+        assertTrue(training.isPresent());
+        assertEquals(TRAINING_TYPE, training.get().getTrainingType().getTrainingTypeName());
+    }
+
+    @Test
+    public void findById_ShouldReturnEmptyOptional() {
+        Optional<Training> training = trainingDao.findById(NON_EXISTENT_ID);
+        assertFalse(training.isPresent());
+    }
+
+    @Test
+    public void findAll_ShouldReturnTrainings() {
+        List<Training> trainings = trainingDao.findAll();
+        assertFalse(trainings.isEmpty());
+    }
+
+    @Test
+    public void save_ShouldPersistNewTraining() {
+        Training training = new Training(testTrainee, testTrainer, "Save Test Training",
+                testTrainingType, TEST_DATE, TEST_DURATION);
+        trainingDao.save(training);
+        entityManager.flush();
+        entityManager.clear();
+
+        Training persisted = entityManager.find(Training.class, training.getId());
+
+        assertAll(
+                () -> assertNotNull(persisted),
+                () -> assertEquals("Save Test Training", persisted.getTrainingName()),
+                () -> assertEquals(TRAINING_TYPE, persisted.getTrainingType().getTrainingTypeName())
         );
     }
 
     @Test
-    void save_ShouldAddTraining() {
-        Training training = createSampleTraining("Workout1");
-
-        Training result = trainingDao.save(training);
-
-        assertNull(result);
-        assertEquals(training, trainingMap.get("Workout1"));
+    public void update_ShouldThrowUnsupportedOperationException() {
+        assertThrows(UnsupportedOperationException.class, () -> trainingDao.update(testTraining));
     }
 
     @Test
-    void findById_ShouldReturnTrainingIfExists() {
-        Training training = createSampleTraining("Cardio");
-        trainingMap.put("Cardio", training);
-
-        Optional<Training> result = trainingDao.findById("Cardio");
-
-        assertTrue(result.isPresent());
-        assertEquals(training, result.get());
+    public void deleteById_ShouldThrowUnsupportedOperationException() {
+        assertThrows(UnsupportedOperationException.class, () -> trainingDao.deleteById(testTraining.getId()));
     }
 
     @Test
-    void findById_ShouldReturnEmptyIfNotExists() {
-        Optional<Training> result = trainingDao.findById("NonExistent");
+    public void findTrainingsByParams_WithAllParams_ShouldReturnList(){
+        List<Training> trainings = trainingDao.findTrainingsByParams(testUserTrainer.getUsername(), testUserTrainee.getUsername(),
+                TEST_DATE.minusDays(7), TEST_DATE.plusDays(7), TRAINING_TYPE);
 
-        assertFalse(result.isPresent());
+        assertFalse(trainings.isEmpty());
+        assertEquals(1, trainings.size());
+        assertEquals(TEST_TRAINING_NAME, trainings.getFirst().getTrainingName());
     }
 
     @Test
-    void findAll_ShouldReturnAllTrainings() {
-        Training t1 = createSampleTraining("Yoga");
-        Training t2 = createSampleTraining("HIIT");
+    public void findTrainingsByParams_WithNoParams_ShouldReturnList(){
+        List<Training> trainings = trainingDao.findTrainingsByParams(null, null, null, null, null);
 
-        trainingMap.put("Yoga", t1);
-        trainingMap.put("HIIT", t2);
-
-        List<Training> all = trainingDao.findAll();
-
-        assertEquals(2, all.size());
-        assertTrue(all.contains(t1));
-        assertTrue(all.contains(t2));
+        assertFalse(trainings.isEmpty());
     }
 
     @Test
-    void update_ShouldThrowUnsupportedOperationException() {
-        Training training = createSampleTraining("Boxing");
+    public void findTrainingsByParams_WithNoMatchingParams_ShouldReturnEmptyList(){
+        List<Training> trainings = trainingDao.findTrainingsByParams("nonexisting.user", "nonexisting.user",
+                TEST_DATE.minusDays(7), TEST_DATE.plusDays(7), TRAINING_TYPE);
 
-        assertThrows(UnsupportedOperationException.class, () -> trainingDao.update(training));
+        assertTrue(trainings.isEmpty());
     }
 
-    @Test
-    void deleteById_ShouldThrowUnsupportedOperationException() {
-        assertThrows(UnsupportedOperationException.class, () -> trainingDao.deleteById("Boxing"));
-    }
 }

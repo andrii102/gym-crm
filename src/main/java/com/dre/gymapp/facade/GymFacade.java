@@ -69,5 +69,16 @@ public class GymFacade {
             trainings.forEach(System.out::println);
         }
     }
+
+    public void printUnassignedTrainers() {
+        List<Trainer> trainers = trainerService.findUnassignedTrainers();
+        System.out.println("Unassigned Trainers:");
+        if (trainers.isEmpty()) {
+            System.out.println("No trainers found");
+        }
+        else {
+            trainers.forEach(System.out::println);
+        }
+    }
 }
 

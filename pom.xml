@@ -85,5 +85,18 @@
             <version>5.14.2</version>
             <scope>test</scope>
         </dependency>
+        <!-- H2 for testing -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>6.2.6</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -24,7 +24,7 @@ public class TraineeDao implements GenericDao<Trainee, Long> {
     // Find trainee by ID, returns Optional which may or may not contain the trainee
     @Override
     public Optional<Trainee> findById(Long aLong) {
-        return Optional.of(entityManager.find(Trainee.class, aLong));
+        return Optional.ofNullable(entityManager.find(Trainee.class, aLong));
     }
 
     // Get a list of all trainees
@@ -49,11 +49,12 @@ public class TraineeDao implements GenericDao<Trainee, Long> {
     @Override
     @Transactional
     public Trainee update(Trainee entity) {
-        if (entityManager.find(Trainee.class, entity.getId()) != null) {
-            return entityManager.merge(entity);
+        if (entity.getId() == null || entityManager.find(Trainee.class, entity.getId()) == null) {
+            throw new NotFoundException("Trainee with ID " + entity.getId() + " not found");
         }
-        throw new NotFoundException("Trainee with ID " + entity.getId() + " not found");
+        return entityManager.merge(entity);
     }
+
 
     // Delete trainee by ID from the table
     @Override

@@ -2,8 +2,8 @@ package com.dre.gymapp.util;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Set;
-import java.util.function.Predicate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -15,7 +15,7 @@ public class CredentialsGeneratorTest {
     public void testGenerateUsernameNotTaken() {
         String firstName = "John";
         String lastName = "Doe";
-        String username = credentialsGenerator.generateUsername(firstName, lastName, s -> false);
+        String username = credentialsGenerator.generateUsername(firstName, lastName, new ArrayList<>());
         assertEquals("john.doe", username);
     }
 
@@ -23,9 +23,8 @@ public class CredentialsGeneratorTest {
     public void testGenerateUsernameTaken() {
         String firstName = "John";
         String lastName = "Doe";
-        Set<String> takenUsernames = Set.of("john.doe", "john.doe1");
-        Predicate<String> isTaken = takenUsernames::contains;
-        String username = credentialsGenerator.generateUsername(firstName, lastName, isTaken);
+        List<String> takenUsernames = List.of("john.doe", "john.doe1");
+        String username = credentialsGenerator.generateUsername(firstName, lastName, takenUsernames);
         assertEquals("john.doe2", username);
     }
 

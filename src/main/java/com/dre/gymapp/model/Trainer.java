@@ -24,6 +24,15 @@ public class Trainer {
 
     }
 
+    public Trainer(TrainingType specialization) {
+        this.specialization = specialization;
+    }
+
+    public Trainer(TrainingType specialization, User user) {
+        this.specialization = specialization;
+        this.user = user;
+    }
+
     @Override
     public String toString() {
         return "Trainer{" +

@@ -23,7 +23,7 @@ public class TrainingDao implements GenericDao<Training, Long> {
     // Finds a training by ID in the database
     @Override
     public Optional<Training> findById(Long aLong) {
-        return Optional.of(entityManager.find(Training.class, aLong));
+        return Optional.ofNullable(entityManager.find(Training.class, aLong));
     }
 
     // Retrieves all trainings from the database using criteria API
@@ -71,7 +71,7 @@ public class TrainingDao implements GenericDao<Training, Long> {
             predicates.add(cb.equal(root.get("trainee").get("user").get("username"), traineeUsername));
         }
         if (fromDate != null && toDate != null) {
-            predicates.add(cb.between(root.get("date"), fromDate, toDate));
+            predicates.add(cb.between(root.get("trainingDate"), fromDate, toDate));
         }
         if (trainingTypeName != null && !trainingTypeName.isEmpty()) {
             Join<Training, TrainingType> trainingTypeJoin = root.join("trainingType");

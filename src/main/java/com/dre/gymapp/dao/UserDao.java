@@ -23,7 +23,7 @@ public class UserDao implements GenericDao<User, Long> {
     // Finds a user by their ID in the database
     @Override
     public Optional<User> findById(Long aLong) {
-        return Optional.of(entityManager.find(User.class, aLong));
+        return Optional.ofNullable(entityManager.find(User.class, aLong));
     }
 
     // Retrieves all users from the database
@@ -46,7 +46,7 @@ public class UserDao implements GenericDao<User, Long> {
     @Override
     @Transactional
     public User update(User entity) {
-        if (entity.getId() != null) {
+        if (entity.getId() == null) {
          throw new IllegalArgumentException("User ID cannot be null for update");
         }
         return entityManager.merge(entity);
