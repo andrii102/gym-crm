@@ -71,7 +71,7 @@ public class GymFacade {
     }
 
     public void printUnassignedTrainers() {
-        List<Trainer> trainers = trainerService.findUnassignedTrainers();
+        List<Trainer> trainers = trainerService.findUnassignedTrainers("john.doe", "pass123");
         System.out.println("Unassigned Trainers:");
         if (trainers.isEmpty()) {
             System.out.println("No trainers found");

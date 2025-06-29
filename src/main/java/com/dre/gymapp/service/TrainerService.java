@@ -87,8 +87,9 @@ public class TrainerService {
     }
 
     // Returns list with unassigned trainers
-    public List<Trainer> findUnassignedTrainers(){
+    public List<Trainer> findUnassignedTrainers(String username, String password){
         logger.info("Finding unassigned trainers");
+        userService.authenticateUser(username, password);
         return trainerDao.findUnassignedTrainers();
     }
 

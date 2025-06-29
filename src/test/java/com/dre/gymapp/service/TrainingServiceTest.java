@@ -3,7 +3,7 @@ package com.dre.gymapp.service;
 import com.dre.gymapp.dao.TrainingDao;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Training;
-import com.dre.gymapp.model.TrainingType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,69 +25,65 @@ public class TrainingServiceTest {
     @Mock
     private TrainingDao trainingDao;
 
-    @Test
-    public void testCreateTraining() {
-        Training inputTraining = new Training("T0", "TR0", "Test",
-                TrainingType.BALANCE, null, null);
-        Training expectedTraining = new Training("T0", "TR0", "Test",
-                TrainingType.BALANCE, null, null);
+    private Training testTraining;
 
-        when(trainingDao.save(inputTraining)).thenReturn(expectedTraining);
-
-        Training result = trainingService.createTraining(inputTraining);
-
-        verify(trainingDao).save(inputTraining);
-        assertEquals(result.getTraineeId(), expectedTraining.getTraineeId());
-        assertEquals(result.getTrainingName(), expectedTraining.getTrainingName());
-        assertEquals(result.getTrainingType(), expectedTraining.getTrainingType());
-        assertEquals(result.getTrainingDate(), expectedTraining.getTrainingDate());
+    @BeforeEach
+    void setUp() {
+        testTraining = new Training();
+        testTraining.setTrainingName("Morning Yoga");
     }
 
     @Test
-    public void testGetTrainingByIdExistingTraining() {
-        String id = "T0";
-        Training expectedTraining = new Training(id, "TR0", "Test",
-                TrainingType.BALANCE, null, null);
+    public void createTraining_ShouldCreateTrainingRecord(){
+        Training result = trainingService.createTraining(testTraining);
 
-        when(trainingDao.findById(id)).thenReturn(Optional.of(expectedTraining));
-
-        Training result = trainingService.getTrainingById(id);
-
-        verify(trainingDao).findById(id);
-        assertEquals(result.getTraineeId(), expectedTraining.getTraineeId());
-        assertEquals(result.getTrainingName(), expectedTraining.getTrainingName());
-        assertEquals(result.getTrainingType(), expectedTraining.getTrainingType());
-        assertEquals(result.getTrainingDate(), expectedTraining.getTrainingDate());
+        assertNotNull(result);
+        assertEquals(testTraining.getTrainingName(), result.getTrainingName());
+        verify(trainingDao).save(testTraining);
     }
 
     @Test
-    public void testGetTrainingByIdNonExistingTraining() {
-        String id = "T0";
-        when(trainingDao.findById(id)).thenReturn(Optional.empty());
+    public void getTrainingBtId(){
+        when(trainingDao.findById(any())).thenReturn(Optional.of(testTraining));
+        Training result = trainingService.getTrainingById(testTraining.getId());
 
+        assertNotNull(result);
+        assertEquals(testTraining.getId(), result.getId());
+        assertEquals(testTraining.getTrainingName(), result.getTrainingName());
 
-        assertThrows(NotFoundException.class, () -> trainingService.getTrainingById(id));
+        verify(trainingDao).findById(any());
     }
 
     @Test
-    public void testGetAllTrainings() {
-        Training training1 = new Training("T0", "TR0", "Test1",
-                TrainingType.BALANCE, null, null);
-        Training training2 = new Training("T1", "TR1", "Test2",
-                TrainingType.STRENGTH, null, null);
-        Training training3 = new Training("T2", "TR2", "Test3",
-                TrainingType.STRENGTH, null, null);
+    public void getTrainingBtId_ShouldThrowException_TrainingNotFound(){
+        when(trainingDao.findById(any())).thenReturn(Optional.empty());
 
-        List<Training> expectedTrainings = List.of(training1, training2, training3);
-
-        when(trainingDao.findAll()).thenReturn(expectedTrainings);
-
-        List<Training> result = trainingService.getAllTrainings();
-
-        verify(trainingDao).findAll();
-        assertEquals(expectedTrainings.size(), result.size());
-        assertEquals(expectedTrainings.get(0).getTrainingName(), result.get(0).getTrainingName());
-        assertEquals(expectedTrainings.get(1).getTrainingName(), result.get(1).getTrainingName());
-        assertEquals(expectedTrainings.get(2).getTrainingName(), result.get(2).getTrainingName());
+        assertThrows(NotFoundException.class,
+                () -> trainingService.getTrainingById(1L));
     }
+
+    @Test
+    public void getAllTrainings(){
+        when(trainingDao.findAll()).thenReturn(List.of(testTraining, testTraining));
+        List<Training> trainings = trainingService.getAllTrainings();
+
+        assertNotNull(trainings);
+        assertEquals(2, trainings.size());
+    }
+
+    @Test
+    public void getTrainerTrainings_ShouldReturnTrainerTrainings(){
+        List<Training> trainings = List.of(testTraining, testTraining);
+
+        when(trainingDao.findTrainingsByParams(any(),any(),any(),any(),any())).thenReturn(trainings);
+
+        List<Training> result = trainingService.getTrainerTrainings("trainer", "trainee",
+                null, null, "first training");
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+
+        verify(trainingDao).findTrainingsByParams(any(),any(),any(),any(),any());
+    }
+
 }

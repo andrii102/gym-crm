@@ -1,9 +1,11 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.TrainerDao;
+import com.dre.gymapp.dto.TrainerProfileUpdateRequest;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainer;
-import com.dre.gymapp.util.CredentialsGenerator;
+import com.dre.gymapp.model.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,96 +28,161 @@ public class TrainerServiceTest {
     @Mock
     private TrainerDao trainerDao;
     @Mock
-    private CredentialsGenerator credentialsGenerator;
+    private UserService userService;
+
+    private User testUser;
+
+    @BeforeEach
+    public void setUp() {
+        testUser = new User("John", "Doe");
+        testUser.setUsername("john.doe");
+        testUser.setPassword("<PASSWORD>");
+    }
 
     @Test
-    public void testCreateTrainer() {
-        String username = "john.doe";
-        String password = "1234567890";
-        Trainer inputTrainer = new Trainer("T0", "John", "Doe");
-        Trainer expectedTrainer = new Trainer("T0", "John", "Doe");
-        expectedTrainer.setUsername(username);
-        expectedTrainer.setPassword(password);
-
-        when(credentialsGenerator.generateUsername(eq("John"), eq("Doe"),any())).thenReturn(username);
-        when(credentialsGenerator.generatePassword()).thenReturn(password);
-        when(trainerDao.save(any(Trainer.class))).thenReturn(expectedTrainer);
-
-        Trainer result = trainerService.createTrainer(inputTrainer);
+    public void createTrainer_ShouldCreateNewTrainerRecord(){
+        when(userService.createUser("John", "Doe")).thenReturn(testUser);
+        Trainer result = trainerService.createTrainer("John", "Doe");
 
         assertNotNull(result);
-        assertEquals(expectedTrainer.getUserId(), result.getUserId());
-        assertEquals(expectedTrainer.getUsername(), result.getUsername());
-        assertEquals(expectedTrainer.getPassword(), result.getPassword());
+        assertEquals(testUser, result.getUser());
 
-        verify(credentialsGenerator).generateUsername(eq("John"), eq("Doe"), any());
-        verify(credentialsGenerator).generatePassword();
         verify(trainerDao).save(any(Trainer.class));
     }
 
     @Test
-    public void testGetTrainerByIdExistingTrainer() {
-        String id = "T0";
-        Trainer expectedTrainer = new Trainer(id, "John", "Doe");
+    public void changePassword_ShouldChangePassword(){
+        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
 
-        when(trainerDao.findById(id)).thenReturn(Optional.of(expectedTrainer));
+        trainerService.changePassword(testUser.getFirstName(), testUser.getPassword(), "newPassword");
 
-        Trainer result = trainerService.getTrainerById(id);
-
-        verify(trainerDao).findById(id);
-        assertEquals(expectedTrainer.getUserId(), result.getUserId());
-        assertEquals(expectedTrainer.getFirstName(), result.getFirstName());
-        assertEquals(expectedTrainer.getLastName(), result.getLastName());
+        verify(userService).changePassword(any(), any());
     }
 
     @Test
-    public void testGetTrainerByIdNonExistingTrainer() {
-        String id = "T0";
+    public void getTrainerById_ShouldReturnTrainer() {
+        Trainer trainer = new Trainer();
+        trainer.setUser(testUser);
 
-        when(trainerDao.findById(id)).thenReturn(Optional.empty());
+        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
 
-        assertThrows(NotFoundException.class, () -> trainerService.getTrainerById(id));
+        when(trainerDao.findById(any())).thenReturn(Optional.of(trainer));
+
+        Trainer result = trainerService.getTrainerById(testUser.getFirstName(), testUser.getPassword(), trainer.getId());
+
+        assertNotNull(result);
+        assertEquals(trainer.getId(), result.getId());
+        assertEquals(trainer.getUser().getUsername(), result.getUser().getUsername());
+
+        verify(trainerDao).findById(eq(trainer.getId()));
     }
 
     @Test
-    public void testGetAllTrainers() {
-        Trainer trainer1 = new Trainer("T0", "John", "Doe");
-        Trainer trainer2 = new Trainer("T1", "Jane", "Doe");
-        Trainer trainer3 = new Trainer("T2", "John", "Smith");
+    public void getTrainerById_ShouldThrowException_TrainerNotFound() {
+        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+        when(trainerDao.findById(any())).thenReturn(Optional.empty());
 
-        when(trainerDao.findAll()).thenReturn(List.of(trainer1, trainer2, trainer3));
+        assertThrows(NotFoundException.class,
+                () -> trainerService.getTrainerById(testUser.getFirstName(), testUser.getPassword(), 1L));
 
-        List<Trainer> result = trainerService.getAllTrainers();
+        verify(trainerDao).findById(any());
+    }
+
+    @Test
+    public void getAllTrainers_ShouldReturnAllTrainers() {
+        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+        when(trainerDao.findAll()).thenReturn(List.of(new Trainer(), new Trainer()));
+        List<Trainer> trainers = trainerService.getAllTrainers(testUser.getFirstName(), testUser.getPassword());
+
+        assertNotNull(trainers);
+        assertEquals(2, trainers.size());
 
         verify(trainerDao).findAll();
-        assertEquals(3, result.size());
-        assertEquals(trainer1.getUserId(), result.get(0).getUserId());
-        assertEquals(trainer1.getFirstName(), result.get(0).getFirstName());
     }
 
     @Test
-    public void testUpdateExistingTrainer() {
-        Trainer inputTrainer = new Trainer("T0", "John", "Doe");
-        Trainer expectedTrainer = new Trainer("T0", "John", "Updated");
+    public void updateTrainer_NullFieldsInRequest_ShouldUpdateTrainerRecord() {
+        Trainer trainer = new Trainer();
+        TrainerProfileUpdateRequest trainerProfileUpdateRequest = new TrainerProfileUpdateRequest();
 
-        when(trainerDao.update(inputTrainer)).thenReturn(expectedTrainer);
+        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+        when(trainerDao.findById(any())).thenReturn(Optional.of(trainer));
+        when(trainerDao.update(any())).thenReturn(trainer);
 
-        Trainer result = trainerService.updateTrainer(inputTrainer);
+        Trainer result = trainerService.updateTrainer(testUser.getFirstName(), testUser.getPassword(), trainerProfileUpdateRequest);
 
-        verify(trainerDao).update(inputTrainer);
-        assertEquals(expectedTrainer.getUserId(), result.getUserId());
-        assertEquals(expectedTrainer.getLastName(), result.getLastName());
+        assertNotNull(result);
+        assertEquals(trainer, result);
+
+        verify(userService).updateUser(any());
+        verify(trainerDao).update(any());
     }
 
     @Test
-    public void testUpdateNonExistingTrainer() {
-        Trainer inputTrainer = new Trainer("T0", "John", "Doe");
+    public void updateTrainer_NonNullFieldsInRequest_ShouldUpdateTraineeRecord(){
+        Trainer trainer = new Trainer();
+        User user = new User("John", "Doe");
+        user.setUsername("john.doe");
+        user.setPassword("12345");
+        trainer.setUser(user);
 
-        when(trainerDao.update(inputTrainer)).thenReturn(null);
+        TrainerProfileUpdateRequest request = new TrainerProfileUpdateRequest();
+        request.setFirstName("NEW_FN");
+        request.setLastName("NEW_LN");
+        request.setUsername("newUsername");
 
-        Trainer trainer = trainerService.updateTrainer(inputTrainer);
+        User updatedUser = new User("NEW_FN", "NEW_LN");
+        updatedUser.setUsername("newUsername");
+        Trainer expectedTrainer = new Trainer(null, updatedUser);
 
-        verify(trainerDao).update(inputTrainer);
-        assertNull(trainer);
+        when(userService.authenticateUser(any(), any())).thenReturn(user);
+        when(trainerDao.findById(any())).thenReturn(Optional.of(trainer));
+        when(trainerDao.update(any())).thenReturn(trainer);
+
+        Trainer result = trainerService.updateTrainer(user.getFirstName(), user.getPassword(), request);
+
+        assertNotNull(result);
+        assertEquals(expectedTrainer.getSpecialization(), result.getSpecialization());
+        assertEquals(expectedTrainer.getUser().getFirstName(), result.getUser().getFirstName());
+        assertEquals(expectedTrainer.getUser().getLastName(), result.getUser().getLastName());
+        assertEquals(expectedTrainer.getUser().getUsername(), result.getUser().getUsername());
+
+        verify(userService).updateUser(any());
+        verify(trainerDao).update(any());
+    }
+
+    @Test
+    public void findUnassignedTrainers(){
+        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+        when(trainerDao.findUnassignedTrainers()).thenReturn(List.of(new Trainer(), new Trainer()));
+
+        List<Trainer> trainers = trainerService.findUnassignedTrainers(testUser.getFirstName(), testUser.getPassword());
+
+        assertNotNull(trainers);
+        assertEquals(2, trainers.size());
+
+        verify(trainerDao).findUnassignedTrainers();
+    }
+
+    @Test
+    public void activateTrainer_ShouldActivateTrainer(){
+        testUser.setActive(false);
+
+        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+
+        trainerService.activateTrainer(testUser.getUsername(), testUser.getPassword());
+
+        verify(userService).setActive(any(), eq(true));
+    }
+
+    @Test
+    public void deactivateTrainer_ShouldDeactivateTrainer(){
+        testUser.setActive(true);
+
+        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+
+        trainerService.deactivateTrainer(testUser.getUsername(), testUser.getPassword());
+
+        verify(userService).setActive(any(), eq(false));
     }
 }

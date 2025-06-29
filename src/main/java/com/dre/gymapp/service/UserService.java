@@ -37,7 +37,6 @@ public class UserService {
             return user;
         } else {
             throw new UnauthorizedException("Invalid credentials");
-
         }
     }
 
@@ -62,8 +61,8 @@ public class UserService {
         logger.info("Updating user with ID: {}", user.getId());
         try {
             return userDao.update(user);
-        } catch (NotFoundException e) {
-            logger.warn("User with ID {} not found: {}", user.getId(), e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.warn("User cannot have null ID: {}", e.getMessage());
             throw e;
         }
     }
@@ -78,8 +77,8 @@ public class UserService {
     public User getUserById(Long id) {
         logger.info("Getting user with ID: {}", id);
         try {
-            return userDao.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        } catch (IllegalArgumentException e) {
+            return userDao.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
+        } catch (NotFoundException e) {
             logger.warn("User with ID {} not found: {}", id, e.getMessage());
             throw e;
         }
@@ -89,8 +88,8 @@ public class UserService {
     public User getUserByUsername(String username) {
         logger.info("Getting user with username: {}", username);
         try {
-            return userDao.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        } catch (IllegalArgumentException e) {
+            return userDao.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
+        } catch (NotFoundException e) {
             logger.warn("User with username {} not found: {}", username, e.getMessage());
             throw e;
         }
