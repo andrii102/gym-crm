@@ -109,16 +109,6 @@ public class TrainingDaoTest {
     }
 
     @Test
-    public void update_ShouldThrowUnsupportedOperationException() {
-        assertThrows(UnsupportedOperationException.class, () -> trainingDao.update(testTraining));
-    }
-
-    @Test
-    public void deleteById_ShouldThrowUnsupportedOperationException() {
-        assertThrows(UnsupportedOperationException.class, () -> trainingDao.deleteById(testTraining.getId()));
-    }
-
-    @Test
     public void findTrainingsByParams_WithAllParams_ShouldReturnList(){
         List<Training> trainings = trainingDao.findTrainingsByParams(testUserTrainer.getUsername(), testUserTrainee.getUsername(),
                 TEST_DATE.minusDays(7), TEST_DATE.plusDays(7), TRAINING_TYPE);

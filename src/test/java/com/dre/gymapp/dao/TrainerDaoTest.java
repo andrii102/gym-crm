@@ -119,11 +119,6 @@ public class TrainerDaoTest {
     }
 
     @Test
-    public void deleteById_ShouldThrowUnsupportedOperation() {
-        assertThrows(UnsupportedOperationException.class ,() -> trainerDao.deleteById(testTrainer.getId()));
-    }
-
-    @Test
     public void findUnassignedTrainers_ShouldReturnTrainers() {
         User user = new User("Test", "User");
         user.setUsername("new.user1");

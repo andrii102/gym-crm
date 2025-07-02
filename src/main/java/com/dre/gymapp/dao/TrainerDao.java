@@ -14,20 +14,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class TrainerDao implements GenericDao<Trainer, Long> {
+public class TrainerDao {
 
     // EntityManager for handling persistence operations
     @PersistenceContext
     private EntityManager entityManager;
 
     // Finds a trainer by their ID in the database
-    @Override
     public Optional<Trainer> findById(Long aLong) {
         return Optional.ofNullable(entityManager.find(Trainer.class, aLong));
     }
 
     // Retrieves all trainers from the database
-    @Override
     public List<Trainer> findAll() {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Trainer> query = cb.createQuery(Trainer.class);
@@ -37,26 +35,18 @@ public class TrainerDao implements GenericDao<Trainer, Long> {
     }
 
     // Persists a new trainer entity to the database
-    @Override
     @Transactional
     public void save(Trainer entity) {
         entityManager.persist(entity);
     }
 
     // Updates an existing trainer in the database if found
-    @Override
     @Transactional
     public Trainer update(Trainer entity) {
         if (entityManager.find(Trainer.class, entity.getId()) != null) {
             return entityManager.merge(entity);
         }
         throw new NotFoundException("Trainer with ID " + entity.getId() + " not found");
-    }
-
-    // Delete operation is not supported for trainers
-    @Override
-    public void deleteById(Long aLong) {
-        throw new UnsupportedOperationException();
     }
 
     // Returns list of unassigned trainers

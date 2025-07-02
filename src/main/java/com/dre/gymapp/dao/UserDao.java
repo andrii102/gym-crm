@@ -14,20 +14,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class UserDao implements GenericDao<User, Long> {
+public class UserDao{
     // EntityManager for handling persistence operations
     @PersistenceContext
     private EntityManager entityManager;
 
 
     // Finds a user by their ID in the database
-    @Override
     public Optional<User> findById(Long aLong) {
         return Optional.ofNullable(entityManager.find(User.class, aLong));
     }
 
     // Retrieves all users from the database
-    @Override
     public List<User> findAll() {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<User> query = cb.createQuery(User.class);
@@ -36,14 +34,12 @@ public class UserDao implements GenericDao<User, Long> {
     }
 
     // Persists a new user entity to the database
-    @Override
     @Transactional
     public void save(User entity) {
         entityManager.persist(entity);
     }
 
     // Updates an existing user in the database if found
-    @Override
     @Transactional
     public User update(User entity) {
         if (entity.getId() == null) {
@@ -53,7 +49,6 @@ public class UserDao implements GenericDao<User, Long> {
     }
 
     // Deletes a user by their ID from the database
-    @Override
     @Transactional
     public void deleteById(Long aLong) {
         User user = entityManager.find(User.class, aLong);

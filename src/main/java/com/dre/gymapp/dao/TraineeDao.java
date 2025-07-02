@@ -15,20 +15,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class TraineeDao implements GenericDao<Trainee, Long> {
+public class TraineeDao {
 
     // Entity manager for database operations
     @PersistenceContext
     private EntityManager entityManager;
 
     // Find trainee by ID, returns Optional which may or may not contain the trainee
-    @Override
     public Optional<Trainee> findById(Long aLong) {
         return Optional.ofNullable(entityManager.find(Trainee.class, aLong));
     }
 
     // Get a list of all trainees
-    @Override
     public List<Trainee> findAll() {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Trainee> query = cb.createQuery(Trainee.class);
@@ -39,14 +37,12 @@ public class TraineeDao implements GenericDao<Trainee, Long> {
     }
 
     // Save a new trainee
-    @Override
     @Transactional
     public void save(Trainee entity) {
         entityManager.persist(entity);
     }
 
     // Update an existing trainee if it exists in a table
-    @Override
     @Transactional
     public Trainee update(Trainee entity) {
         if (entity.getId() == null || entityManager.find(Trainee.class, entity.getId()) == null) {
@@ -57,7 +53,6 @@ public class TraineeDao implements GenericDao<Trainee, Long> {
 
 
     // Delete trainee by ID from the table
-    @Override
     @Transactional
     public void deleteById(Long aLong) {
         Trainee trainee = entityManager.find(Trainee.class, aLong);
