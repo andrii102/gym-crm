@@ -45,7 +45,8 @@ public class UserService {
         logger.info("Creating new user");
         User user = new User(firstName, lastName);
 
-        String username = credentialsGenerator.generateUsername(firstName, lastName, userDao.findByUsernameStartingWith(firstName + "." + lastName));
+        String username = credentialsGenerator.generateUsername(firstName, lastName,
+                userDao.findByUsernameStartingWith(firstName.toLowerCase() + "." + lastName.toLowerCase()));
         String password = credentialsGenerator.generatePassword();
 
         user.setUsername(username);

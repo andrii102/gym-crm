@@ -1,7 +1,10 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.TrainerDao;
-import com.dre.gymapp.dto.TrainerProfileUpdateRequest;
+import com.dre.gymapp.dao.TrainingTypeDao;
+import com.dre.gymapp.dto.auth.RegistrationResponse;
+import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
+import com.dre.gymapp.dto.trainer.TrainerProfileUpdateRequest;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainer;
 import com.dre.gymapp.model.User;
@@ -17,6 +20,7 @@ public class TrainerService {
     private static final Logger logger = LoggerFactory.getLogger(TrainerService.class);
     private TrainerDao trainerDao;
     private UserService userService;
+    private TrainingTypeDao trainingTypeDao;
 
     @Autowired
     public void setUserService(UserService userService) {
@@ -30,18 +34,17 @@ public class TrainerService {
     }
 
     // Creates and saves a new trainer
-    public Trainer createTrainer(String firstName, String lastName) {
+    public RegistrationResponse createTrainer(TrainerRegistrationRequest request) {
         logger.info("Creating new trainer");
 
-        User user = userService.createUser(firstName, lastName);
+        User user = userService.createUser(request.getFirstName(), request.getLastName());
 
-        Trainer trainer = new Trainer();
-        trainer.setUser(user);
+        Trainer trainer = new Trainer(trainingTypeDao.findById(request.getSpecializationId()), user);
         trainerDao.save(trainer);
 
         logger.info("Trainer created successfully");
 
-        return trainer;
+        return new RegistrationResponse(user.getUsername(), user.getPassword());
     }
 
     public void changePassword(String username, String password, String newPassword) {
@@ -107,5 +110,10 @@ public class TrainerService {
         User user = userService.authenticateUser(username, password);
         userService.setActive(user, false);
         logger.info("Trainer deactivated successfully");
+    }
+
+    @Autowired
+    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
+        this.trainingTypeDao = trainingTypeDao;
     }
 }

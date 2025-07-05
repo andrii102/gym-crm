@@ -123,6 +123,8 @@ public class TrainerDaoTest {
         User user = new User("Test", "User");
         user.setUsername("new.user1");
         user.setPassword("<PASSWORD>");
+        entityManager.persist(user);
+
         Trainee trainee = new Trainee(null, null);
         trainee.setUser(user);
         trainee.setTrainers(List.of(testTrainer));

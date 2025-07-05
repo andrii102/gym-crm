@@ -56,6 +56,8 @@ class TraineeDaoTest {
         User user = new User("Test", "User");
         user.setUsername("new.user1");
         user.setPassword("<PASSWORD>");
+        entityManager.persist(user);
+
         Trainee trainee = new Trainee(LocalDate.of(2025, 1, 1), TEST_ADDRESS);
         trainee.setUser(user);
 

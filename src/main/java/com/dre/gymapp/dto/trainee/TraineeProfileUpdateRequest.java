@@ -1,4 +1,4 @@
-package com.dre.gymapp.dto;
+package com.dre.gymapp.dto.trainee;
 
 import lombok.Getter;
 import lombok.Setter;

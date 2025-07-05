@@ -9,6 +9,7 @@ import lombok.Setter;
 @Entity
 public class Trainer {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     @ManyToOne
@@ -16,7 +17,6 @@ public class Trainer {
     TrainingType specialization;
 
     @OneToOne
-    @MapsId
     @JoinColumn(name = "user_id")
     User user;
 

@@ -1,7 +1,9 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.TrainerDao;
-import com.dre.gymapp.dto.TrainerProfileUpdateRequest;
+import com.dre.gymapp.dto.auth.RegistrationResponse;
+import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
+import com.dre.gymapp.dto.trainer.TrainerProfileUpdateRequest;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainer;
 import com.dre.gymapp.model.User;
@@ -42,10 +44,12 @@ public class TrainerServiceTest {
     @Test
     public void createTrainer_ShouldCreateNewTrainerRecord(){
         when(userService.createUser("John", "Doe")).thenReturn(testUser);
-        Trainer result = trainerService.createTrainer("John", "Doe");
+
+        RegistrationResponse result = trainerService.createTrainer(new TrainerRegistrationRequest("John", "Doe", null));
 
         assertNotNull(result);
-        assertEquals(testUser, result.getUser());
+        assertEquals(testUser.getUsername(), result.getUsername());
+        assertEquals(testUser.getPassword(), result.getPassword());
 
         verify(trainerDao).save(any(Trainer.class));
     }

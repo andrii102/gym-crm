@@ -1,7 +1,9 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.TraineeDao;
-import com.dre.gymapp.dto.TraineeProfileUpdateRequest;
+import com.dre.gymapp.dto.auth.RegistrationResponse;
+import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
+import com.dre.gymapp.dto.trainee.TraineeProfileUpdateRequest;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
@@ -31,18 +33,18 @@ public class TraineeService {
     }
 
     // Creates and saves a new trainee
-    public Trainee createTrainee(String firstName, String lastName) {
+    public RegistrationResponse createTrainee(TraineeRegistrationRequest request) {
         logger.info("Creating new trainee");
 
-        User user = userService.createUser(firstName, lastName);
+        User user = userService.createUser(request.getFirstName(), request.getLastName());
 
-        Trainee trainee = new Trainee();
+        Trainee trainee = new Trainee(request.getDateOfBirth(), request.getAddress());
         trainee.setUser(user);
         traineeDao.save(trainee);
 
         logger.info("Trainee created successfully");
 
-        return trainee;
+        return new RegistrationResponse(user.getUsername(), user.getPassword());
     }
 
     // Updates an existing trainee record

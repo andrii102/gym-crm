@@ -13,6 +13,7 @@ import java.util.List;
 @Entity
 public class Trainee {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     LocalDate dateOfBirth;
@@ -20,7 +21,6 @@ public class Trainee {
     String address;
 
     @OneToOne
-    @MapsId
     @JoinColumn(name = "user_id")
     User user;
 

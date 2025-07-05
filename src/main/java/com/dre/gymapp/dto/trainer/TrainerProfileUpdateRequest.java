@@ -1,4 +1,4 @@
-package com.dre.gymapp.dto;
+package com.dre.gymapp.dto.trainer;
 
 import com.dre.gymapp.model.TrainingType;
 import lombok.Getter;
