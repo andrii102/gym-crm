@@ -10,13 +10,13 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class TraineeRegistrationRequest {
     @NotBlank(message = "First name is required")
-    String firstName;
+    private String firstName;
 
     @NotBlank(message = "Last name is required")
-    String lastName;
+    private String lastName;
 
-    LocalDate dateOfBirth;
-    String address;
+    private LocalDate dateOfBirth;
+    private String address;
 
     public TraineeRegistrationRequest(String firstName, String lastName) {
         this.firstName = firstName;

@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TrainerRegistrationRequest {
     @NotBlank(message = "First name is required")
-    String firstName;
+    private String firstName;
 
     @NotBlank(message = "Last name is required")
-    String lastName;
+    private String lastName;
 
     @NotNull(message = "SpecializationId is required")
-    Long specializationId;
+    private Long specializationId;
 
     public TrainerRegistrationRequest(String firstName, String lastName,  Long specializationId) {
         this.firstName = firstName;

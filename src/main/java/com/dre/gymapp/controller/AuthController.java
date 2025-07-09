@@ -1,8 +1,10 @@
 package com.dre.gymapp.controller;
 
+import com.dre.gymapp.dto.auth.LoginChangeRequest;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
 import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
+import com.dre.gymapp.model.User;
 import com.dre.gymapp.service.TraineeService;
 import com.dre.gymapp.service.TrainerService;
 import com.dre.gymapp.service.UserService;
@@ -46,4 +48,14 @@ public class AuthController {
         userService.authenticateUser(username, password);
         return ResponseEntity.ok("Login Successful");
     }
+
+    @PutMapping("/login")
+    public ResponseEntity<String> changeLogin(@RequestBody @Valid LoginChangeRequest request ) {
+        User user = userService.authenticateUser(request.getUsername(), request.getOldPassword());
+
+        userService.changePassword(user, request.getNewPassword());
+
+        return ResponseEntity.ok("Login changed successfully");
+    }
+
 }

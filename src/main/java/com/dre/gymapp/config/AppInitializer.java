@@ -4,6 +4,7 @@ import jakarta.servlet.FilterRegistration;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
@@ -30,6 +31,9 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
         encodingFilter.setInitParameter("encoding", "UTF-8");
         encodingFilter.setInitParameter("forceEncoding", "true");
         encodingFilter.addMappingForUrlPatterns(null, true, "/*");
+
+        FilterRegistration.Dynamic basicAuthFilter = servletContext.addFilter("basicAuthFilter", new DelegatingFilterProxy("basicAuthFilter"));
+        basicAuthFilter.addMappingForUrlPatterns(null, true, "/api/*");
     }
 
 }

@@ -3,6 +3,7 @@ package com.dre.gymapp.service;
 import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
+import com.dre.gymapp.dto.trainee.TraineeProfileResponse;
 import com.dre.gymapp.dto.trainee.TraineeProfileUpdateRequest;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
@@ -54,16 +55,19 @@ public class TraineeServiceTest {
     @Test
     public void updateTrainee_NullFieldsInRequest_ShouldUpdateTraineeRecord() {
         Trainee trainee = new Trainee();
-        TraineeProfileUpdateRequest traineeProfileUpdateRequest = new TraineeProfileUpdateRequest();
+        TraineeProfileUpdateRequest traineeProfileUpdateRequest = new TraineeProfileUpdateRequest(testUser.getUsername(), null,
+                null, true);
 
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
-        when(traineeDao.findById(any())).thenReturn(Optional.of(trainee));
+        when(userService.getUserByUsername(any())).thenReturn(testUser);
+        when(traineeDao.findByUserId(any())).thenReturn(Optional.of(trainee));
+        when(userService.updateUser(any())).thenReturn(testUser);
         when(traineeDao.update(any())).thenReturn(trainee);
 
-        Trainee result = traineeService.updateTrainee(testUser.getFirstName(), testUser.getPassword(), traineeProfileUpdateRequest);
+        TraineeProfileResponse result = traineeService.updateTrainee(testUser.getFirstName(), traineeProfileUpdateRequest);
 
         assertNotNull(result);
-        assertEquals(trainee, result);
+        assertEquals(testUser.getFirstName(), result.getFirstName());
+        assertEquals(testUser.getLastName(), result.getLastName());
 
         verify(userService).updateUser(any());
         verify(traineeDao).update(any());
@@ -72,31 +76,29 @@ public class TraineeServiceTest {
     @Test
     public void updateTrainee_NonNullFieldsInRequest_ShouldUpdateTraineeRecord() {
         Trainee trainee = new Trainee();
-        User user = new User("John", "Doe");
-        user.setUsername("john.doe");
-        trainee.setUser(user);
+        trainee.setUser(testUser);
 
         TraineeProfileUpdateRequest request = new TraineeProfileUpdateRequest();
         request.setFirstName("NEW_FN");
         request.setLastName("NEW_LN");
-        request.setUsername("newUsername");
+        request.setUsername(testUser.getUsername());
         request.setAddress("123 Main St");
 
         User updatedUser = new User("NEW_FN", "NEW_LN");
-        updatedUser.setUsername("newUsername");
+        updatedUser.setUsername(testUser.getUsername());
         Trainee expectedTrainee = new Trainee(null, "123 Main St");
         expectedTrainee.setUser(updatedUser);
 
-        when(userService.authenticateUser(any(), any())).thenReturn(user);
-        when(traineeDao.findById(any())).thenReturn(Optional.of(trainee));
+        when(userService.getUserByUsername(any())).thenReturn(testUser);
+        when(traineeDao.findByUserId(any())).thenReturn(Optional.of(trainee));
+        when(userService.updateUser(any())).thenReturn(updatedUser);
         when(traineeDao.update(any())).thenReturn(trainee);
 
-        Trainee result = traineeService.updateTrainee(user.getFirstName(), user.getPassword(), request);
+        TraineeProfileResponse result = traineeService.updateTrainee(testUser.getFirstName(), request);
 
         assertNotNull(result);
-        assertEquals(expectedTrainee.getUser().getFirstName(), result.getUser().getFirstName());
-        assertEquals(expectedTrainee.getUser().getLastName(), result.getUser().getLastName());
-        assertEquals(expectedTrainee.getUser().getUsername(), result.getUser().getUsername());
+        assertEquals(expectedTrainee.getUser().getFirstName(), result.getFirstName());
+        assertEquals(expectedTrainee.getUser().getLastName(), result.getLastName());
         assertEquals(expectedTrainee.getAddress(), result.getAddress());
 
         verify(userService).updateUser(any());
@@ -182,12 +184,11 @@ public class TraineeServiceTest {
         Trainee trainee = new Trainee();
         trainee.setUser(testUser);
 
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+        when(traineeDao.findByUsername(any())).thenReturn(trainee);
 
-        traineeService.deleteTraineeByUsername(testUser.getFirstName(), testUser.getPassword(), trainee.getUser().getUsername());
+        traineeService.deleteTraineeByUsername(trainee.getUser().getUsername());
 
-        verify(userService).deleteUserById(eq(trainee.getUser().getId()));
-        verify(traineeDao).deleteById(eq(trainee.getId()));
+        verify(traineeDao).delete(eq(trainee));
     }
 
     @Test

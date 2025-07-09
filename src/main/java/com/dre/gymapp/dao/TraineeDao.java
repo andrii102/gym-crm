@@ -2,11 +2,13 @@ package com.dre.gymapp.dao;
 
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
+import com.dre.gymapp.model.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,4 +64,25 @@ public class TraineeDao {
         entityManager.remove(trainee);
     }
 
+    @Transactional
+    public void delete(Trainee trainee) {
+        entityManager.remove(entityManager.contains(trainee) ? trainee : entityManager.merge(trainee));
+    }
+
+    public Optional<Trainee> findByUserId(Long id) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Trainee> query = cb.createQuery(Trainee.class);
+        Root<Trainee> root = query.from(Trainee.class);
+        query.select(root).where(cb.equal(root.get("user").get("id"), id));
+        return entityManager.createQuery(query).getResultList().stream().findFirst();
+    }
+
+    public Trainee findByUsername(String username) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Trainee> query = cb.createQuery(Trainee.class);
+        Root<Trainee> root = query.from(Trainee.class);
+        Join<Trainee, User> userJoin = root.join("user");
+        query.select(root).where((cb.equal(userJoin.get("username"), username)));
+        return entityManager.createQuery(query).getResultList().stream().findFirst().orElse(null);
+    }
 }

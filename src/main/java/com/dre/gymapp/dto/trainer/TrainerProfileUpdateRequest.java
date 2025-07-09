@@ -7,8 +7,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TrainerProfileUpdateRequest {
-    String firstName;
-    String lastName;
-    String username;
-    TrainingType specialization;
+    private String firstName;
+    private String lastName;
+    private String username;
+    private TrainingType specialization;
 }

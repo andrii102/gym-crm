@@ -1,11 +1,13 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.TrainerDao;
+import com.dre.gymapp.dao.TrainingTypeDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
 import com.dre.gymapp.dto.trainer.TrainerProfileUpdateRequest;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainer;
+import com.dre.gymapp.model.TrainingType;
 import com.dre.gymapp.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,8 @@ public class TrainerServiceTest {
     private TrainerDao trainerDao;
     @Mock
     private UserService userService;
+    @Mock
+    private TrainingTypeDao trainingTypeDao;
 
     private User testUser;
 
@@ -44,6 +48,7 @@ public class TrainerServiceTest {
     @Test
     public void createTrainer_ShouldCreateNewTrainerRecord(){
         when(userService.createUser("John", "Doe")).thenReturn(testUser);
+        when(trainingTypeDao.findById(any())).thenReturn(new TrainingType());
 
         RegistrationResponse result = trainerService.createTrainer(new TrainerRegistrationRequest("John", "Doe", null));
 

@@ -3,7 +3,9 @@ package com.dre.gymapp.service;
 import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
+import com.dre.gymapp.dto.trainee.TraineeProfileResponse;
 import com.dre.gymapp.dto.trainee.TraineeProfileUpdateRequest;
+import com.dre.gymapp.dto.trainer.TrainerShortProfile;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
@@ -12,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -48,20 +51,40 @@ public class TraineeService {
     }
 
     // Updates an existing trainee record
-    public Trainee updateTrainee(String username, String password, TraineeProfileUpdateRequest request) {
+    @Transactional
+    public TraineeProfileResponse updateTrainee(String username,TraineeProfileUpdateRequest request) {
         logger.info("Updating trainee");
-        User user = userService.authenticateUser(username, password);
-        Trainee trainee = traineeDao.findById(user.getId()).orElseThrow(() -> new NotFoundException("Trainee not found"));
+        User user = userService.getUserByUsername(username);
+        Trainee trainee = traineeDao.findByUserId(
+                user.getId()).orElseThrow(() -> new NotFoundException("Trainee not found"));
 
         if (request.getFirstName() != null) { user.setFirstName(request.getFirstName());}
         if (request.getLastName() != null) { user.setLastName(request.getLastName());}
-        if (request.getUsername() != null) { user.setUsername(request.getUsername());}
 
         if (request.getDateOfBirth() != null) { trainee.setDateOfBirth(request.getDateOfBirth());}
         if (request.getAddress() != null) { trainee.setAddress(request.getAddress());}
 
-        userService.updateUser(user);
-        return traineeDao.update(trainee);
+        user = userService.updateUser(user);
+        trainee = traineeDao.update(trainee);
+
+        List<TrainerShortProfile> trainers = trainee.getTrainers().stream()
+                        .map(trainer -> new TrainerShortProfile(
+                                trainer.getUser().getFirstName(),
+                                trainer.getUser().getLastName(),
+                                trainer.getUser().getUsername(),
+                                trainer.getSpecialization().getTrainingTypeName()
+                        ))
+                                .toList();
+
+        logger.info("Trainee updated successfully");
+        return new TraineeProfileResponse(
+                user.getFirstName(),
+                user.getLastName(),
+                trainee.getDateOfBirth(),
+                trainee.getAddress(),
+                user.isActive(),
+                trainers
+        );
     }
 
     // Change password
@@ -84,6 +107,29 @@ public class TraineeService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public TraineeProfileResponse getTraineeProfileByUsername(String username) {
+        logger.info("Getting trainee profile with username: {}", username);
+        User user = userService.getUserByUsername(username);
+        Trainee trainee = traineeDao.findByUserId(user.getId()).orElseThrow(() -> new NotFoundException("Trainee not found"));
+        List<TrainerShortProfile> trainers = trainee.getTrainers().stream()
+                        .map(trainer -> new TrainerShortProfile(
+                                trainer.getUser().getUsername(),
+                                trainer.getUser().getFirstName(),
+                                trainer.getUser().getLastName(),
+                                trainer.getSpecialization().getTrainingTypeName()
+                        )).toList();
+        logger.info("Trainee profile retrieved successfully");
+        return new TraineeProfileResponse(
+                user.getFirstName(),
+                user.getLastName(),
+                trainee.getDateOfBirth(),
+                trainee.getAddress(),
+                user.isActive(),
+                trainers
+        );
+    }
+
     // Gets a list of all trainees
     public List<Trainee> getAllTrainees(String username, String password) {
         logger.info("Getting all trainees");
@@ -92,11 +138,14 @@ public class TraineeService {
     }
 
     // Deletes a trainee by their username
-    public void deleteTraineeByUsername(String username, String password, String traineeUsername){
-        logger.info("Deleting trainee with username: {}", traineeUsername);
-        User user = userService.authenticateUser(username, password);
-        userService.deleteUserById(user.getId());
-        traineeDao.deleteById(user.getId());
+    public void deleteTraineeByUsername(String username){
+        logger.info("Deleting trainee with username: {}", username);
+        Trainee trainee = traineeDao.findByUsername(username);
+        if (trainee == null) {
+            logger.warn("Trainee with username {} not found", username);
+            throw new NotFoundException("Trainee not found");
+        }
+        traineeDao.delete(trainee);
     }
 
     // Deletes a trainee by their ID

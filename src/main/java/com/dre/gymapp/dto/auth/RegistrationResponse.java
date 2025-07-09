@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class RegistrationResponse {
-    String username;
-    String password;
+    private String username;
+    private String password;
 
     public RegistrationResponse(String username, String password) {
         this.username = username;

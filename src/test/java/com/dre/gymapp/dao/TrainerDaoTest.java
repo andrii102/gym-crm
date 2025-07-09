@@ -80,6 +80,8 @@ public class TrainerDaoTest {
         user.setPassword("<PASSWORD>");
         Trainer trainer = new Trainer(testTrainingType, user);
 
+        entityManager.persist(user);
+
         trainerDao.save(trainer);
         entityManager.flush();
         entityManager.clear();
@@ -134,7 +136,7 @@ public class TrainerDaoTest {
         List<Trainer> trainers = trainerDao.findUnassignedTrainers();
         System.out.println(trainers.size());
         assertFalse(trainers.isEmpty());
-        assertEquals(2, trainers.size());
+        assertEquals(3, trainers.size());
     }
 
 }
