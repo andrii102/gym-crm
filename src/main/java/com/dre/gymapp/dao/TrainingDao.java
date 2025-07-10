@@ -55,8 +55,11 @@ public class TrainingDao {
         if (traineeUsername != null && !traineeUsername.isEmpty()) {
             predicates.add(cb.equal(root.get("trainee").get("user").get("username"), traineeUsername));
         }
-        if (fromDate != null && toDate != null) {
-            predicates.add(cb.between(root.get("trainingDate"), fromDate, toDate));
+        if (fromDate != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("trainingDate"), fromDate));
+        }
+        if (toDate != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("trainingDate"), toDate));
         }
         if (trainingTypeName != null && !trainingTypeName.isEmpty()) {
             Join<Training, TrainingType> trainingTypeJoin = root.join("trainingType");

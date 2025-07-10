@@ -133,7 +133,7 @@ public class TrainerDaoTest {
         entityManager.persist(trainee);
         entityManager.flush();
 
-        List<Trainer> trainers = trainerDao.findUnassignedTrainers();
+        List<Trainer> trainers = trainerDao.findUnassignedTrainersOnTrainee(trainee.getId());
         System.out.println(trainers.size());
         assertFalse(trainers.isEmpty());
         assertEquals(3, trainers.size());

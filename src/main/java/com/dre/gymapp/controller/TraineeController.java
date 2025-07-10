@@ -2,12 +2,18 @@ package com.dre.gymapp.controller;
 
 import com.dre.gymapp.dto.trainee.TraineeProfileResponse;
 import com.dre.gymapp.dto.trainee.TraineeProfileUpdateRequest;
+import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
+import com.dre.gymapp.dto.trainer.TrainerShortProfile;
+import com.dre.gymapp.dto.trainings.TraineeTrainingsRequest;
+import com.dre.gymapp.dto.trainings.TraineeTrainingsResponse;
 import com.dre.gymapp.service.TraineeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/trainees")
@@ -37,6 +43,20 @@ public class TraineeController {
     public ResponseEntity<String> deleteTrainee(@PathVariable("username") String username) {
         traineeService.deleteTraineeByUsername(username);
         return ResponseEntity.ok("Trainee deleted successfully");
+    }
+
+    @PutMapping("/{username}/trainers")
+    public ResponseEntity<List<TrainerShortProfile>> updateTraineeTrainersList(@PathVariable("username") String username,
+                                                                               @RequestBody @Valid UpdateTrainersListRequest trainerUsernameList) {
+        List<TrainerShortProfile> response = traineeService.updateTraineeTrainerList(username, trainerUsernameList);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/{username}/trainings")
+    public ResponseEntity<List<TraineeTrainingsResponse>> getTraineeTrainings(@PathVariable("username") String username,
+                                                                             @ModelAttribute TraineeTrainingsRequest request) {
+        List<TraineeTrainingsResponse> response = traineeService.getTraineeTrainings(username, request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }

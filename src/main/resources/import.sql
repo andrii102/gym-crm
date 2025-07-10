@@ -34,6 +34,9 @@ INSERT INTO training ( trainee_id, trainer_id, trainingName, training_type, trai
 VALUES ( 1, 1, 'Morning Yoga', 1, DATE '2025-06-01', 60);
 INSERT INTO training ( trainee_id, trainer_id, trainingName, training_type, trainingDate, trainingDuration)
 VALUES ( 2, 2, 'Evening Cardio', 2, DATE '2025-06-02', 45);
+INSERT INTO training ( trainee_id, trainer_id, trainingName, training_type, trainingDate, trainingDuration)
+VALUES ( 2, 3, 'Strength Training', 3, DATE '2025-06-03', 90);
 
 INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES (1, 1);
 INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES (2, 2);
+INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES (2, 3);

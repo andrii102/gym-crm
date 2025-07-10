@@ -1,14 +1,19 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.TraineeDao;
+import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
 import com.dre.gymapp.dto.trainee.TraineeProfileResponse;
 import com.dre.gymapp.dto.trainee.TraineeProfileUpdateRequest;
+import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
+import com.dre.gymapp.dto.trainings.TraineeTrainingsRequest;
+import com.dre.gymapp.dto.trainings.TraineeTrainingsResponse;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
+import com.dre.gymapp.model.Training;
 import com.dre.gymapp.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +26,19 @@ import java.util.List;
 @Service
 public class TraineeService {
     private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
-    private TraineeDao traineeDao;
-    private UserService userService;
+    private final TraineeDao traineeDao;
+    private final UserService userService;
+    private final TrainingService trainingService;
+    private final TrainerDao trainerDao;
 
-    // Sets the trainee DAO through dependency injection
+    // DI
     @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
+    public TraineeService(TraineeDao traineeDao, UserService userService,
+                          TrainingService trainingService, TrainerDao trainerDao) {
         this.traineeDao = traineeDao;
-    }
-
-    @Autowired
-    public void setUserService(UserService userService) {
         this.userService = userService;
+        this.trainingService = trainingService;
+        this.trainerDao = trainerDao;
     }
 
     // Creates and saves a new trainee
@@ -52,7 +58,7 @@ public class TraineeService {
 
     // Updates an existing trainee record
     @Transactional
-    public TraineeProfileResponse updateTrainee(String username,TraineeProfileUpdateRequest request) {
+    public TraineeProfileResponse updateTrainee(String username, TraineeProfileUpdateRequest request) {
         logger.info("Updating trainee");
         User user = userService.getUserByUsername(username);
         Trainee trainee = traineeDao.findByUserId(
@@ -60,6 +66,7 @@ public class TraineeService {
 
         if (request.getFirstName() != null) { user.setFirstName(request.getFirstName());}
         if (request.getLastName() != null) { user.setLastName(request.getLastName());}
+        user.setActive(request.isActive());
 
         if (request.getDateOfBirth() != null) { trainee.setDateOfBirth(request.getDateOfBirth());}
         if (request.getAddress() != null) { trainee.setAddress(request.getAddress());}
@@ -96,9 +103,8 @@ public class TraineeService {
     }
 
     // Gets a trainee by their ID, throws exception if not found
-    public Trainee getTraineeById(String username, String password, Long id) {
+    public Trainee getTraineeById( Long id) {
         logger.info("Getting trainee with ID: {}", id);
-        userService.authenticateUser(username, password);
         try {
             return traineeDao.findById(id).orElseThrow(() -> new NotFoundException("Trainee not found"));
         } catch (NotFoundException e) {
@@ -107,11 +113,20 @@ public class TraineeService {
         }
     }
 
+    // Gets trainee by username
+    public Trainee getTraineeByUsername(String username) {
+        logger.info("Getting trainee with username: {}", username);
+        User user = userService.getUserByUsername(username);
+        Trainee trainee = traineeDao.findByUserId(user.getId()).orElseThrow(() -> new NotFoundException("Trainee not found"));
+        logger.info("Trainee retrieved successfully");
+        return trainee;
+    }
+
+    // Gets trainee profile fy username
     @Transactional(readOnly = true)
     public TraineeProfileResponse getTraineeProfileByUsername(String username) {
         logger.info("Getting trainee profile with username: {}", username);
-        User user = userService.getUserByUsername(username);
-        Trainee trainee = traineeDao.findByUserId(user.getId()).orElseThrow(() -> new NotFoundException("Trainee not found"));
+        Trainee trainee = traineeDao.findByUsername(username).orElseThrow(() -> new NotFoundException("Trainee not found"));
         List<TrainerShortProfile> trainers = trainee.getTrainers().stream()
                         .map(trainer -> new TrainerShortProfile(
                                 trainer.getUser().getUsername(),
@@ -121,11 +136,11 @@ public class TraineeService {
                         )).toList();
         logger.info("Trainee profile retrieved successfully");
         return new TraineeProfileResponse(
-                user.getFirstName(),
-                user.getLastName(),
+                trainee.getUser().getFirstName(),
+                trainee.getUser().getLastName(),
                 trainee.getDateOfBirth(),
                 trainee.getAddress(),
-                user.isActive(),
+                trainee.getUser().isActive(),
                 trainers
         );
     }
@@ -140,18 +155,13 @@ public class TraineeService {
     // Deletes a trainee by their username
     public void deleteTraineeByUsername(String username){
         logger.info("Deleting trainee with username: {}", username);
-        Trainee trainee = traineeDao.findByUsername(username);
-        if (trainee == null) {
-            logger.warn("Trainee with username {} not found", username);
-            throw new NotFoundException("Trainee not found");
-        }
+        Trainee trainee = traineeDao.findByUsername(username).orElseThrow(() -> new NotFoundException("Trainee not found"));
         traineeDao.delete(trainee);
     }
 
     // Deletes a trainee by their ID
-    public void deleteTraineeById (String username, String password, Long id) {
+    public void deleteTraineeById (Long id) {
         logger.info("Deleting trainee with ID: {}", id);
-        userService.authenticateUser(username, password);
         try {
             traineeDao.deleteById(id);
         } catch (NotFoundException e) {
@@ -160,13 +170,44 @@ public class TraineeService {
         }
     }
 
-    // Adds trainer to the list of trainers
-    public void addTrainer(String username, String password,Trainee trainee, Trainer trainer) {
+    // Updates trainee's trainer list
+    @Transactional
+    public List<TrainerShortProfile> updateTraineeTrainerList(String username, UpdateTrainersListRequest trainerList) {
         logger.info("Adding trainer to trainee with username: {}", username);
-        User user = userService.authenticateUser(username, password);
-        trainee.getTrainers().add(trainer);
-        traineeDao.update(trainee);
+        Trainee trainee = traineeDao.findByUsername(username).orElseThrow(() -> new NotFoundException("Trainee not found"));
+        List<Trainer> trainers = trainerDao.findByUsernames(trainerList.getTrainers());
+        trainee.setTrainers(trainers);
+        Trainee updatedTrainee = traineeDao.update(trainee);
+        List<TrainerShortProfile> trainerShortProfiles = updatedTrainee.getTrainers().stream()
+                .map(trainer -> new TrainerShortProfile(
+                        trainer.getUser().getFirstName(),
+                        trainer.getUser().getLastName(),
+                        trainer.getUser().getUsername(),
+                        trainer.getSpecialization().getTrainingTypeName()
+                ))
+                .toList();
+
         logger.info("Trainer added successfully");
+        return trainerShortProfiles;
+    }
+
+    // Returns trainee's trainings by params
+    public List<TraineeTrainingsResponse> getTraineeTrainings(String username, TraineeTrainingsRequest request) {
+        logger.info("Getting trainee trainings for trainee with username: {}", username);
+        List<Training> trainings = trainingService.getTrainingsByParams(request.getTrainerUsername(), username,
+                request.getPeriodFrom(), request.getPeriodTo(), request.getTrainingType());
+        System.out.println("REQUEST:" + request);
+        List<TraineeTrainingsResponse> dto = trainings.stream()
+                .map(training -> new TraineeTrainingsResponse(
+                        training.getTrainingName(),
+                        training.getTrainingDate(),
+                        training.getTrainingType().getTrainingTypeName(),
+                        training.getTrainingDuration(),
+                        training.getTrainer().getUser().getUsername()
+                )).toList();
+
+        logger.info("Trainee trainings retrieved successfully");
+        return dto;
     }
 
     // Activates trainee

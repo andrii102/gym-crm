@@ -5,9 +5,12 @@ import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
 import com.dre.gymapp.dto.trainee.TraineeProfileResponse;
 import com.dre.gymapp.dto.trainee.TraineeProfileUpdateRequest;
+import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
+import com.dre.gymapp.dto.trainer.TrainerShortProfile;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
+import com.dre.gymapp.model.TrainingType;
 import com.dre.gymapp.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +35,8 @@ public class TraineeServiceTest {
     private TraineeDao traineeDao;
     @Mock
     private UserService userService;
+    @Mock
+    private TrainerService trainerService;
 
     private User testUser;
 
@@ -118,11 +123,9 @@ public class TraineeServiceTest {
     public void getTraineeById_ShouldReturnTrainee() {
         Trainee trainee = new Trainee();
 
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
-
         when(traineeDao.findById(any())).thenReturn(Optional.of(trainee));
 
-        Trainee result = traineeService.getTraineeById(testUser.getFirstName(), testUser.getPassword(), trainee.getId());
+        Trainee result = traineeService.getTraineeById(trainee.getId());
 
         assertNotNull(result);
         assertEquals(trainee.getId(), result.getId());
@@ -136,7 +139,7 @@ public class TraineeServiceTest {
         when(traineeDao.findById(any())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class,
-                () -> traineeService.getTraineeById(testUser.getFirstName(), testUser.getPassword(), 1L));
+                () -> traineeService.getTraineeById(1L));
 
         verify(traineeDao).findById(any());
     }
@@ -158,9 +161,7 @@ public class TraineeServiceTest {
         Trainee trainee = new Trainee();
         trainee.setId(1L);
 
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
-
-        traineeService.deleteTraineeById(testUser.getFirstName(), testUser.getPassword(), trainee.getId());
+        traineeService.deleteTraineeById( trainee.getId());
 
         verify(traineeDao).deleteById(eq(trainee.getId()));
     }
@@ -174,7 +175,7 @@ public class TraineeServiceTest {
         doThrow(NotFoundException.class).when(traineeDao).deleteById(any());
 
         assertThrows(NotFoundException.class,
-                () -> traineeService.deleteTraineeById(testUser.getFirstName(), testUser.getPassword(), trainee.getId()));
+                () -> traineeService.deleteTraineeById(trainee.getId()));
 
         verify(traineeDao).deleteById(eq(trainee.getId()));
     }
@@ -184,7 +185,7 @@ public class TraineeServiceTest {
         Trainee trainee = new Trainee();
         trainee.setUser(testUser);
 
-        when(traineeDao.findByUsername(any())).thenReturn(trainee);
+        when(traineeDao.findByUsername(any())).thenReturn(Optional.of(trainee));
 
         traineeService.deleteTraineeByUsername(trainee.getUser().getUsername());
 
@@ -192,15 +193,28 @@ public class TraineeServiceTest {
     }
 
     @Test
-    public void addTrainer_ShouldAddTrainerToTrainee() {
+    public void updateTraineeTrainerList_ShouldUpdateTrainerList() {
         Trainee trainee = new Trainee();
-        Trainer trainer = new Trainer();
+        trainee.setUser(testUser);
 
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+        User trainerUser = new User("Trainer", "User");
+        trainerUser.setUsername("trainer.user");
+        Trainer trainer = new Trainer(new TrainingType("RUNNING"), trainerUser);
 
-        traineeService.addTrainer(testUser.getUsername(), testUser.getPassword(), trainee, trainer);
+        UpdateTrainersListRequest request = new UpdateTrainersListRequest();
+        request.setTrainers(List.of(trainerUser.getUsername()));
 
-        assertTrue(trainee.getTrainers().contains(trainer));
+        Trainee updatedTrainee = new Trainee();
+        updatedTrainee.setTrainers(List.of(trainer));
+
+        when(traineeDao.findByUsername(any())).thenReturn(Optional.of(trainee));
+        when(trainerService.getTrainersByUsernames(any())).thenReturn(List.of(trainer));
+        when(traineeDao.update(any())).thenReturn(updatedTrainee);
+
+        List<TrainerShortProfile> result = traineeService.updateTraineeTrainerList(testUser.getUsername(), request);
+
+        assertEquals(updatedTrainee.getTrainers().size(), result.size());
+
         verify(traineeDao).update(any());
     }
 

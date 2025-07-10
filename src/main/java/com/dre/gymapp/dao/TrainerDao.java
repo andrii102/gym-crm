@@ -2,10 +2,12 @@ package com.dre.gymapp.dao;
 
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainer;
+import com.dre.gymapp.model.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,27 @@ public class TrainerDao {
     // Finds a trainer by their ID in the database
     public Optional<Trainer> findById(Long aLong) {
         return Optional.ofNullable(entityManager.find(Trainer.class, aLong));
+    }
+
+    // Finds trainers by usernames from the list
+    public List<Trainer> findByUsernames(List<String> usernames) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Trainer> query = cb.createQuery(Trainer.class);
+        Root<Trainer> root = query.from(Trainer.class);
+        Join<Trainer, User> userJoin = root.join("user");
+
+        query.select(root).where(userJoin.get("username").in(usernames));
+
+        return entityManager.createQuery(query).getResultList();
+    }
+
+    public Optional<Trainer> findByUsername(String username) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Trainer> query = cb.createQuery(Trainer.class);
+        Root<Trainer> root = query.from(Trainer.class);
+        Join<Trainer, User> userJoin = root.join("user");
+        query.select(root).where(cb.equal(userJoin.get("username"), username));
+        return entityManager.createQuery(query).getResultList().stream().findFirst();
     }
 
     // Retrieves all trainers from the database
@@ -50,9 +73,12 @@ public class TrainerDao {
     }
 
     // Returns list of unassigned trainers
-    public List<Trainer> findUnassignedTrainers() {
-        String sql = "SELECT * FROM trainer WHERE user_id NOT IN (SELECT trainer_id FROM trainee_trainer)";
-        List<?> rawList = entityManager.createNativeQuery(sql, Trainer.class).getResultList();
+    public List<Trainer> findUnassignedTrainersOnTrainee(Long traineeId) {
+        String sql = "SELECT * FROM trainer WHERE user_id NOT IN " +
+                "(SELECT trainer_id FROM trainee_trainer WHERE trainee_id = :traineeId)";
+        List<?> rawList = entityManager.createNativeQuery(sql, Trainer.class)
+                .setParameter("traineeId", traineeId)
+                .getResultList();
         return (List<Trainer>) rawList;
     }
 

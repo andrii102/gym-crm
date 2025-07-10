@@ -1,11 +1,15 @@
 package com.dre.gymapp.service;
 
+import com.dre.gymapp.dao.TraineeDao;
+import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingDao;
+import com.dre.gymapp.dto.trainings.NewTrainingRequest;
 import com.dre.gymapp.exception.NotFoundException;
+import com.dre.gymapp.model.Trainee;
+import com.dre.gymapp.model.Trainer;
 import com.dre.gymapp.model.Training;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,17 +20,24 @@ public class TrainingService {
 
     private static final Logger logger = LoggerFactory.getLogger(TrainingService.class);
 
-    private TrainingDao trainingDao;
+    private final TraineeDao traineeDao;
+    private final TrainerDao trainerDao;
+    private final TrainingDao trainingDao;
 
-    // Sets the training DAO through dependency injection
-    @Autowired
-    public void setTrainingDao(TrainingDao trainingDao) {
+    public TrainingService(TraineeDao traineeDao, TrainerDao trainerDao, TrainingDao trainingDao) {
+        this.traineeDao = traineeDao;
+        this.trainerDao = trainerDao;
         this.trainingDao = trainingDao;
     }
 
     // Creates and saves a new training
-    public Training createTraining(Training training) {
-        logger.info("Creating new training with ID: {}", training.getTrainingName());
+    public Training createTraining(NewTrainingRequest request) {
+        logger.info("Creating new training");
+        Trainee trainee = traineeDao.findByUsername(request.getTraineeUsername()).orElseThrow(() -> new NotFoundException("Trainee not found"));
+        Trainer trainer = trainerDao.findByUsername(request.getTrainerUsername()).orElseThrow(() -> new NotFoundException("Trainer not found"));
+
+        Training training = new Training(trainee, trainer, request.getTrainingName(),
+                trainer.getSpecialization(), request.getTrainingDate(), request.getTrainingDuration());
         trainingDao.save(training);
         return training;
     }
@@ -49,10 +60,10 @@ public class TrainingService {
     }
 
     // Returns list of trainings by parameters
-    public List<Training> getTrainerTrainings(String trainerUsername, String traineeUsername, LocalDate fromDate,
-                                              LocalDate toDate, String trainingTypeName) {
-        logger.info("Getting Trainer's trainings");
-        return  trainingDao.findTrainingsByParams(trainerUsername, traineeUsername, fromDate, toDate, trainingTypeName);
+    public List<Training> getTrainingsByParams(String trainerUsername, String traineeUsername, LocalDate fromDate,
+                                               LocalDate toDate, String trainingTypeName) {
+        logger.info("Getting training by params");
+        return trainingDao.findTrainingsByParams(trainerUsername, traineeUsername, fromDate, toDate, trainingTypeName);
     }
 }
 

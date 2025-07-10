@@ -1,36 +1,49 @@
 package com.dre.gymapp.service;
 
+import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingTypeDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
+import com.dre.gymapp.dto.trainee.TraineeShortProfile;
+import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
+import com.dre.gymapp.dto.trainer.TrainerProfileResponse;
 import com.dre.gymapp.dto.trainer.TrainerProfileUpdateRequest;
+import com.dre.gymapp.dto.trainer.TrainerShortProfile;
+import com.dre.gymapp.dto.trainings.TrainerTrainingsRequest;
+import com.dre.gymapp.dto.trainings.TrainerTrainingsResponse;
+import com.dre.gymapp.exception.BadRequestException;
 import com.dre.gymapp.exception.NotFoundException;
+import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
+import com.dre.gymapp.model.Training;
 import com.dre.gymapp.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class TrainerService {
     private static final Logger logger = LoggerFactory.getLogger(TrainerService.class);
-    private TrainerDao trainerDao;
-    private UserService userService;
-    private TrainingTypeDao trainingTypeDao;
+    private final TrainerDao trainerDao;
+    private final UserService userService;
+    private final TrainingTypeDao trainingTypeDao;
+    private final TrainingService trainingService;
+    private final TraineeDao traineeDao;
 
+    // DI
     @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
-
-    // Sets the trainer DAO through dependency injection
-    @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
+    public TrainerService(TrainerDao trainerDao, UserService userService,
+                          TrainingTypeDao trainingTypeDao, TrainingService trainingService, TraineeDao traineeDao) {
         this.trainerDao = trainerDao;
+        this.userService = userService;
+        this.trainingTypeDao = trainingTypeDao;
+        this.trainingService = trainingService;
+        this.traineeDao = traineeDao;
     }
 
     // Creates and saves a new trainer
@@ -47,17 +60,16 @@ public class TrainerService {
         return new RegistrationResponse(user.getUsername(), user.getPassword());
     }
 
-    public void changePassword(String username, String password, String newPassword) {
+    public void changePassword(String username,String newPassword) {
         logger.info("Changing password for trainer with username: {}", username);
-        User user = userService.authenticateUser(username, password);
+        User user = userService.getUserByUsername(username);
         userService.changePassword(user, newPassword);
         logger.info("Password changed successfully");
     }
 
     // Gets a trainer by their ID, throws exception if not found
-    public Trainer getTrainerById(String username, String password, Long id) {
+    public Trainer getTrainerById(Long id) {
         logger.info("Getting trainer with ID: {}", id);
-        userService.authenticateUser(username, password);
         try {
             return trainerDao.findById(id).orElseThrow(() -> new NotFoundException("Trainer not found"));
         } catch (NotFoundException e) {
@@ -66,54 +78,132 @@ public class TrainerService {
         }
     }
 
+    public Trainer getTrainerByUsername(String username) {
+        logger.info("Getting trainer with username: {}", username);
+        User user = userService.getUserByUsername(username);
+        Trainer trainer = trainerDao.findById(user.getId()).orElseThrow(() -> new NotFoundException("Trainer not found"));
+        logger.info("Trainer retrieved successfully");
+        return trainer;
+    }
+
+    @Transactional(readOnly = true)
+    public TrainerProfileResponse getTrainerProfileByUsername(String username) {
+        logger.info("Getting trainer profile with username: {}", username);
+        User user = userService.getUserByUsername(username);
+        Trainer trainer = trainerDao.findById(user.getId()).orElseThrow(() -> new NotFoundException("Trainer not found"));
+        List<TraineeShortProfile> trainees = trainer.getTrainees().stream()
+                .map(trainee -> new TraineeShortProfile(
+                        trainee.getUser().getUsername(),
+                        trainee.getUser().getFirstName(),
+                        trainee.getUser().getLastName()
+                )).toList();
+
+        logger.info("Trainer profile retrieved successfully");
+        return new TrainerProfileResponse(
+                user.getFirstName(),
+                user.getLastName(),
+                trainer.getSpecialization().getTrainingTypeName(),
+                user.isActive(),
+                trainees
+        );
+    }
+
     // Gets a list of all trainers 
-    public List<Trainer> getAllTrainers(String username, String password) {
+    public List<Trainer> getAllTrainers() {
         logger.info("Getting all trainers");
-        userService.authenticateUser(username, password);
         return trainerDao.findAll();
     }
 
     // Updates an existing trainer record
-    public Trainer updateTrainer(String username, String password, TrainerProfileUpdateRequest request) {
-        logger.info("Updating trainer");
-        User user = userService.authenticateUser(username, password);
+    @Transactional
+    public TrainerProfileResponse updateTrainer(String username, TrainerProfileUpdateRequest request) {
+        logger.info("Updating trainer with username: {}", username);
+        User user = userService.getUserByUsername(username);
         Trainer trainer = trainerDao.findById(user.getId()).orElseThrow(() -> new NotFoundException("Trainer not found"));
+
+        if (!trainer.getSpecialization().getTrainingTypeName().equals(request.getTrainingType())){
+            logger.warn("Cannot change training type for trainer with username: {}", username);
+            throw new BadRequestException("Cannot change training type for trainer");
+        }
 
         if (request.getFirstName() != null) { user.setFirstName(request.getFirstName());}
         if (request.getLastName() != null) { user.setLastName(request.getLastName());}
-        if (request.getUsername() != null) { user.setUsername(request.getUsername());}
+        user.setActive(request.isActive());
 
-        if (request.getSpecialization() != null) { trainer.setSpecialization(request.getSpecialization());}
+        user = userService.updateUser(user);
+        trainer = trainerDao.update(trainer);
 
-        userService.updateUser(user);
-        return trainerDao.update(trainer);
+        List<TraineeShortProfile> trainees = trainer.getTrainees().stream()
+                        .map(trainee -> new TraineeShortProfile(
+                                trainee.getUser().getUsername(),
+                                trainee.getUser().getFirstName(),
+                                trainee.getUser().getLastName()
+                        )).toList();
+
+        logger.info("Trainer updated successfully");
+        return new TrainerProfileResponse(
+                user.getFirstName(),
+                user.getLastName(),
+                trainer.getSpecialization().getTrainingTypeName(),
+                user.isActive(),
+                trainees
+        );
+    }
+
+    // Returns list of trainers
+    public List<Trainer> getTrainersByUsernames(UpdateTrainersListRequest trainerList) {
+        logger.info("Getting trainers by usernames");
+        List<Trainer> trainers = trainerDao.findByUsernames(trainerList.getTrainers());
+        logger.info("Trainers retrieved successfully");
+        return trainers;
     }
 
     // Returns list with unassigned trainers
-    public List<Trainer> findUnassignedTrainers(String username, String password){
-        logger.info("Finding unassigned trainers");
-        userService.authenticateUser(username, password);
-        return trainerDao.findUnassignedTrainers();
+    public List<TrainerShortProfile> getUnassignedTrainers(String username){
+        logger.info("Getting unassigned trainers for trainee with username '{}'", username);
+        Trainee trainee = traineeDao.findByUsername(username).orElseThrow(() -> new NotFoundException("Trainee not found"));
+        List<Trainer> trainers = trainerDao.findUnassignedTrainersOnTrainee(trainee.getId());
+        List<TrainerShortProfile> traineeShortProfiles = trainers.stream()
+                .map(trainer -> new TrainerShortProfile(
+                        trainer.getUser().getFirstName(),
+                        trainer.getUser().getLastName(),
+                        trainer.getUser().getUsername(),
+                        trainer.getSpecialization().getTrainingTypeName()
+                )).toList();
+        return traineeShortProfiles;
+    }
+
+    public List<TrainerTrainingsResponse> getTrainerTrainings(String username, TrainerTrainingsRequest request) {
+        logger.info("Getting trainer trainings for trainer with username: {}", username);
+        List<Training> trainings = trainingService.getTrainingsByParams(username, request.getTraineeUsername(),
+                request.getPeriodFrom(), request.getPeriodTo(), null);
+        List<TrainerTrainingsResponse> dto = trainings.stream()
+                .map(training -> new TrainerTrainingsResponse(
+                        training.getTrainingName(),
+                        training.getTrainingDate(),
+                        training.getTrainingType().getTrainingTypeName(),
+                        training.getTrainingDuration(),
+                        training.getTrainee().getUser().getUsername()
+                )).toList();
+
+        logger.info("Trainer trainings retrieved successfully");
+        return dto;
     }
 
     // Activates trainer
-    public void activateTrainer(String username, String password) {
+    public void activateTrainer(String username) {
         logger.info("Activating trainer with username: {}", username);
-        User user = userService.authenticateUser(username, password);
+        User user = userService.getUserByUsername(username);
         userService.setActive(user, true);
         logger.info("Trainer activated successfully");
     }
 
     // De-activates trainer
-    public void deactivateTrainer(String username, String password) {
+    public void deactivateTrainer(String username) {
         logger.info("Deactivating trainer with username: {}", username);
-        User user = userService.authenticateUser(username, password);
+        User user = userService.getUserByUsername(username);
         userService.setActive(user, false);
         logger.info("Trainer deactivated successfully");
     }
 
-    @Autowired
-    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
-        this.trainingTypeDao = trainingTypeDao;
-    }
 }

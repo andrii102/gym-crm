@@ -77,12 +77,12 @@ public class TraineeDao {
         return entityManager.createQuery(query).getResultList().stream().findFirst();
     }
 
-    public Trainee findByUsername(String username) {
+    public Optional<Trainee> findByUsername(String username) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Trainee> query = cb.createQuery(Trainee.class);
         Root<Trainee> root = query.from(Trainee.class);
         Join<Trainee, User> userJoin = root.join("user");
         query.select(root).where((cb.equal(userJoin.get("username"), username)));
-        return entityManager.createQuery(query).getResultList().stream().findFirst().orElse(null);
+        return entityManager.createQuery(query).getResultList().stream().findFirst();
     }
 }

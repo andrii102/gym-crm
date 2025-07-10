@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -19,6 +22,9 @@ public class Trainer {
     @OneToOne
     @JoinColumn(name = "user_id")
     User user;
+
+    @ManyToMany(mappedBy = "trainers") // field in Trainee entity
+    private List<Trainee> trainees = new ArrayList<>();
 
     public Trainer() {
 

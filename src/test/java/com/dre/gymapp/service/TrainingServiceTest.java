@@ -1,6 +1,7 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.TrainingDao;
+import com.dre.gymapp.dto.trainings.NewTrainingRequest;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Training;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,8 @@ public class TrainingServiceTest {
 
     @Test
     public void createTraining_ShouldCreateTrainingRecord(){
-        Training result = trainingService.createTraining(testTraining);
+        Training result = trainingService.createTraining(new NewTrainingRequest("trainee.user", "trainer.user",
+                testTraining.getTrainingName(), null, null));
 
         assertNotNull(result);
         assertEquals(testTraining.getTrainingName(), result.getTrainingName());
@@ -72,12 +74,12 @@ public class TrainingServiceTest {
     }
 
     @Test
-    public void getTrainerTrainings_ShouldReturnTrainerTrainings(){
+    public void getTrainerTrainings_ShouldReturnTrainingsByParams(){
         List<Training> trainings = List.of(testTraining, testTraining);
 
         when(trainingDao.findTrainingsByParams(any(),any(),any(),any(),any())).thenReturn(trainings);
 
-        List<Training> result = trainingService.getTrainerTrainings("trainer", "trainee",
+        List<Training> result = trainingService.getTrainingsByParams("trainer", "trainee",
                 null, null, "first training");
 
         assertNotNull(result);
