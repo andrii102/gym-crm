@@ -1,5 +1,6 @@
 package com.dre.gymapp.service;
 
+import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingTypeDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
@@ -40,7 +41,7 @@ public class TrainerServiceTest {
     @Mock
     private TrainingTypeDao trainingTypeDao;
     @Mock
-    private TraineeService traineeService;
+    private TraineeDao traineeDao;
 
     private User testUser;
 
@@ -76,8 +77,6 @@ public class TrainerServiceTest {
     public void getTrainerById_ShouldReturnTrainer() {
         Trainer trainer = new Trainer();
         trainer.setUser(testUser);
-
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
 
         when(trainerDao.findById(any())).thenReturn(Optional.of(trainer));
 
@@ -170,7 +169,7 @@ public class TrainerServiceTest {
         Trainer trainer1 = new Trainer(new TrainingType("RUNNING"), new User("user", "1"));
         Trainer trainer2 = new Trainer(new TrainingType("CARDIO"), new User("user2", "2"));
 
-        when(traineeService.getTraineeByUsername(any())).thenReturn(trainee);
+        when(traineeDao.findByUsername(any())).thenReturn(Optional.of(trainee));
         when(trainerDao.findUnassignedTrainersOnTrainee(any())).thenReturn(List.of(trainer1, trainer2));
 
         List<TrainerShortProfile> trainers = trainerService.getUnassignedTrainers(testUser.getUsername());
@@ -182,23 +181,23 @@ public class TrainerServiceTest {
     }
 
     @Test
-    public void activateTrainer_ShouldActivateTrainer(){
+    public void setTrainerActiveStatus_ShouldActivateTrainer(){
         testUser.setActive(false);
 
         when(userService.getUserByUsername(any())).thenReturn(testUser);
 
-        trainerService.activateTrainer(testUser.getUsername());
+        trainerService.setTrainerActiveStatus(testUser.getUsername(), true);
 
         verify(userService).setActive(any(), eq(true));
     }
 
     @Test
-    public void deactivateTrainer_ShouldDeactivateTrainer(){
+    public void setTrainerActiveStatus_ShouldDeactivateTrainer(){
         testUser.setActive(true);
 
         when(userService.getUserByUsername(any())).thenReturn(testUser);
 
-        trainerService.deactivateTrainer(testUser.getUsername());
+        trainerService.setTrainerActiveStatus(testUser.getUsername(), false);
 
         verify(userService).setActive(any(), eq(false));
     }

@@ -1,6 +1,7 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.TraineeDao;
+import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
 import com.dre.gymapp.dto.trainee.TraineeProfileResponse;
@@ -34,9 +35,9 @@ public class TraineeServiceTest {
     @Mock
     private TraineeDao traineeDao;
     @Mock
-    private UserService userService;
+    private TrainerDao trainerDao;
     @Mock
-    private TrainerService trainerService;
+    private UserService userService;
 
     private User testUser;
 
@@ -135,7 +136,6 @@ public class TraineeServiceTest {
 
     @Test
     public void getTraineeById_ShouldThrowException_TraineeNotFound() {
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
         when(traineeDao.findById(any())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class,
@@ -171,7 +171,6 @@ public class TraineeServiceTest {
         Trainee trainee = new Trainee();
         trainee.setId(1L);
 
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
         doThrow(NotFoundException.class).when(traineeDao).deleteById(any());
 
         assertThrows(NotFoundException.class,
@@ -208,7 +207,7 @@ public class TraineeServiceTest {
         updatedTrainee.setTrainers(List.of(trainer));
 
         when(traineeDao.findByUsername(any())).thenReturn(Optional.of(trainee));
-        when(trainerService.getTrainersByUsernames(any())).thenReturn(List.of(trainer));
+        when(trainerDao.findByUsernames(any())).thenReturn(List.of(trainer));
         when(traineeDao.update(any())).thenReturn(updatedTrainee);
 
         List<TrainerShortProfile> result = traineeService.updateTraineeTrainerList(testUser.getUsername(), request);
@@ -219,26 +218,25 @@ public class TraineeServiceTest {
     }
 
     @Test
-    public void activateTrainee_ShouldActivateTrainee(){
+    public void setTraineeActiveStatus_ShouldActivateTrainee(){
         testUser.setActive(false);
 
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+        when(userService.getUserByUsername(any())).thenReturn(testUser);
 
-        traineeService.activateTrainee(testUser.getUsername(), testUser.getPassword());
+        traineeService.setTraineeActiveStatus(testUser.getUsername(), true);
 
         verify(userService).setActive(any(), eq(true));
     }
 
     @Test
-    public void deactivateTrainee_ShouldDeactivateTrainee(){
+    public void setTraineeActiveStatus_ShouldDeactivateTrainee(){
         testUser.setActive(true);
 
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
+        when(userService.getUserByUsername(any())).thenReturn(testUser);
 
-        traineeService.deactivateTrainee(testUser.getUsername(), testUser.getPassword());
+        traineeService.setTraineeActiveStatus(testUser.getUsername(), false);
 
         verify(userService).setActive(any(), eq(false));
     }
-
 
 }

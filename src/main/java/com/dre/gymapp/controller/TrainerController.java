@@ -5,6 +5,7 @@ import com.dre.gymapp.dto.trainer.TrainerProfileUpdateRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
 import com.dre.gymapp.dto.trainings.TrainerTrainingsRequest;
 import com.dre.gymapp.dto.trainings.TrainerTrainingsResponse;
+import com.dre.gymapp.dto.user.ActivationRequest;
 import com.dre.gymapp.exception.BadRequestException;
 import com.dre.gymapp.service.TrainerService;
 import jakarta.validation.Valid;
@@ -53,6 +54,12 @@ public class TrainerController {
                                                                               @ModelAttribute TrainerTrainingsRequest request ) {
         List<TrainerTrainingsResponse> response = trainerService.getTrainerTrainings(username, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PatchMapping("/{username}/activation")
+    public ResponseEntity<String> setTrainerActiveStatus(@PathVariable("username") String username, @RequestBody @Valid ActivationRequest request ) {
+        trainerService.setTrainerActiveStatus(username, request.isActive());
+        return ResponseEntity.ok("Trainer active status updated successfully");
     }
 
 }

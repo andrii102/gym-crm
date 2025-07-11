@@ -15,6 +15,7 @@ import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
 import com.dre.gymapp.model.Training;
 import com.dre.gymapp.model.User;
+import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -210,19 +211,11 @@ public class TraineeService {
         return dto;
     }
 
-    // Activates trainee
-    public void activateTrainee(String username, String password) {
-        logger.info("Activating trainee with username: {}", username);
-        User user = userService.authenticateUser(username, password);
-        userService.setActive(user, true);
-        logger.info("Trainee activated successfully");
-    }
-
-    // De-activates trainee
-    public void deactivateTrainee(String username, String password) {
-        logger.info("Deactivating trainee with username: {}", username);
-        User user = userService.authenticateUser(username, password);
-        userService.setActive(user, false);
-        logger.info("Trainee deactivated successfully");
+    // Sets active status for trainee
+    public void setTraineeActiveStatus(String username, @NotNull(message = "Active is required") boolean active) {
+        logger.info("Setting trainee active status to: {}", active);
+        User user = userService.getUserByUsername(username);
+        userService.setActive(user, active);
+        logger.info("Trainee active status set successfully");
     }
 }

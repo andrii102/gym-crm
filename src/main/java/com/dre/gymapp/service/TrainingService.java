@@ -3,11 +3,14 @@ package com.dre.gymapp.service;
 import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingDao;
+import com.dre.gymapp.dao.TrainingTypeDao;
 import com.dre.gymapp.dto.trainings.NewTrainingRequest;
+import com.dre.gymapp.dto.trainings.TrainingTypeResponse;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
 import com.dre.gymapp.model.Training;
+import com.dre.gymapp.model.TrainingType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,11 +26,13 @@ public class TrainingService {
     private final TraineeDao traineeDao;
     private final TrainerDao trainerDao;
     private final TrainingDao trainingDao;
+    private final TrainingTypeDao trainingTypeDao;
 
-    public TrainingService(TraineeDao traineeDao, TrainerDao trainerDao, TrainingDao trainingDao) {
+    public TrainingService(TraineeDao traineeDao, TrainerDao trainerDao, TrainingDao trainingDao, TrainingTypeDao trainingTypeDao) {
         this.traineeDao = traineeDao;
         this.trainerDao = trainerDao;
         this.trainingDao = trainingDao;
+        this.trainingTypeDao = trainingTypeDao;
     }
 
     // Creates and saves a new training
@@ -57,6 +62,16 @@ public class TrainingService {
     public List<Training> getAllTrainings() {
         logger.info("Getting all trainings");
         return trainingDao.findAll();
+    }
+
+    public List<TrainingTypeResponse> getAllTrainingTypes() {
+        List<TrainingType> trainingTypes = trainingTypeDao.findAll();
+        List<TrainingTypeResponse> dto = trainingTypes.stream()
+                .map(trainingType -> new TrainingTypeResponse(
+                        trainingType.getId(),
+                        trainingType.getTrainingTypeName()
+                )).toList();
+        return dto;
     }
 
     // Returns list of trainings by parameters

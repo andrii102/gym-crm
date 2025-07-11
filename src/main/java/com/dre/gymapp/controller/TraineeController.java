@@ -6,6 +6,7 @@ import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
 import com.dre.gymapp.dto.trainings.TraineeTrainingsRequest;
 import com.dre.gymapp.dto.trainings.TraineeTrainingsResponse;
+import com.dre.gymapp.dto.user.ActivationRequest;
 import com.dre.gymapp.service.TraineeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +58,12 @@ public class TraineeController {
                                                                              @ModelAttribute TraineeTrainingsRequest request) {
         List<TraineeTrainingsResponse> response = traineeService.getTraineeTrainings(username, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PatchMapping("/{username}/activation")
+    public ResponseEntity<String> updateActiveStatus(@PathVariable("username") String username, @RequestBody @Valid ActivationRequest request) {
+        traineeService.setTraineeActiveStatus(username, request.isActive());
+        return ResponseEntity.ok("Trainee active status updated successfully");
     }
 
 }

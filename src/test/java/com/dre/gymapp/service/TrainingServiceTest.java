@@ -1,8 +1,12 @@
 package com.dre.gymapp.service;
 
+import com.dre.gymapp.dao.TraineeDao;
+import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingDao;
 import com.dre.gymapp.dto.trainings.NewTrainingRequest;
 import com.dre.gymapp.exception.NotFoundException;
+import com.dre.gymapp.model.Trainee;
+import com.dre.gymapp.model.Trainer;
 import com.dre.gymapp.model.Training;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +29,10 @@ public class TrainingServiceTest {
     private TrainingService trainingService;
     @Mock
     private TrainingDao trainingDao;
+    @Mock
+    private TraineeDao traineeDao;
+    @Mock
+    private TrainerDao trainerDao;
 
     private Training testTraining;
 
@@ -36,12 +44,15 @@ public class TrainingServiceTest {
 
     @Test
     public void createTraining_ShouldCreateTrainingRecord(){
+        when(traineeDao.findByUsername(any())).thenReturn(Optional.of(new Trainee()));
+        when(trainerDao.findByUsername(any())).thenReturn(Optional.of(new Trainer()));
+
         Training result = trainingService.createTraining(new NewTrainingRequest("trainee.user", "trainer.user",
                 testTraining.getTrainingName(), null, null));
 
         assertNotNull(result);
         assertEquals(testTraining.getTrainingName(), result.getTrainingName());
-        verify(trainingDao).save(testTraining);
+        verify(trainingDao).save(any());
     }
 
     @Test
