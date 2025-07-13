@@ -8,7 +8,8 @@ import lombok.Getter;
 @Table(name = "trainingType")
 public class TrainingType {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "type_seq")
+    @SequenceGenerator(name = "type_seq", sequenceName = "trainingType_SEQ", allocationSize = 1)
     Long id;
     @Column(nullable = false, unique = true)
     String trainingTypeName;

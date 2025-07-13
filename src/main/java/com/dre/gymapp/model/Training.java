@@ -11,7 +11,8 @@ import java.time.LocalDate;
 @Entity
 public class Training {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "training_seq")
+    @SequenceGenerator(name = "training_seq", sequenceName = "Training_SEQ", allocationSize = 1)
     Long id;
 
     @ManyToOne

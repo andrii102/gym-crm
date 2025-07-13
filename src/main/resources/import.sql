@@ -30,13 +30,20 @@ INSERT INTO trainee ( id, dateOfBirth, address, user_id)
 VALUES ( 2, DATE '1998-11-22', '456 Oak Ave', 6);
 
 -- Insert into training
-INSERT INTO training ( trainee_id, trainer_id, trainingName, training_type, trainingDate, trainingDuration)
-VALUES ( 1, 1, 'Morning Yoga', 1, DATE '2025-06-01', 60);
-INSERT INTO training ( trainee_id, trainer_id, trainingName, training_type, trainingDate, trainingDuration)
-VALUES ( 2, 2, 'Evening Cardio', 2, DATE '2025-06-02', 45);
-INSERT INTO training ( trainee_id, trainer_id, trainingName, training_type, trainingDate, trainingDuration)
-VALUES ( 2, 3, 'Strength Training', 3, DATE '2025-06-03', 90);
+INSERT INTO training (id ,trainee_id, trainer_id, trainingName, training_type, trainingDate, trainingDuration)
+VALUES (1, 1, 1, 'Morning Yoga', 1, DATE '2025-06-01', 60);
+INSERT INTO training (id ,trainee_id, trainer_id, trainingName, training_type, trainingDate, trainingDuration)
+VALUES (2, 2, 2, 'Evening Cardio', 2, DATE '2025-06-02', 45);
+INSERT INTO training (id ,trainee_id, trainer_id, trainingName, training_type, trainingDate, trainingDuration)
+VALUES (3, 2, 3, 'Strength Training', 3, DATE '2025-06-03', 90);
 
 INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES (1, 1);
 INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES (2, 2);
 INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES (2, 3);
+
+-- Sync sequence values with max existing IDs
+SELECT setval('users_SEQ', (SELECT MAX(id) FROM users));
+SELECT setval('trainingType_SEQ', (SELECT MAX(id) FROM trainingType));
+SELECT setval('Trainer_SEQ', (SELECT MAX(id) FROM trainer));
+SELECT setval('Trainee_SEQ', (SELECT MAX(id) FROM trainee));
+SELECT setval('Training_SEQ', (SELECT MAX(id) FROM training));

@@ -8,6 +8,8 @@ import com.dre.gymapp.dto.trainings.TraineeTrainingsRequest;
 import com.dre.gymapp.dto.trainings.TraineeTrainingsResponse;
 import com.dre.gymapp.dto.user.ActivationRequest;
 import com.dre.gymapp.service.TraineeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,7 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/trainees")
+@RequestMapping("/api/trainees")
+@Tag(name = "Trainee", description = "Trainee API")
 public class TraineeController {
 
     private final TraineeService traineeService;
@@ -27,12 +30,14 @@ public class TraineeController {
         this.traineeService = traineeService;
     }
 
+    @Operation(summary = "Create a new trainee")
     @GetMapping("/{username}")
     public ResponseEntity<TraineeProfileResponse> getTraineeProfile(@PathVariable("username") String username) {
         TraineeProfileResponse response = traineeService.getTraineeProfileByUsername(username);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "Create a new trainer")
     @PutMapping("/{username}")
     public ResponseEntity<TraineeProfileResponse> updateTraineeProfile(@PathVariable("username") String username,
                                                                        @RequestBody @Valid TraineeProfileUpdateRequest request) {

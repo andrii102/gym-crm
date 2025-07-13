@@ -10,7 +10,8 @@ import lombok.Setter;
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
+    @SequenceGenerator(name = "user_seq", sequenceName = "users_SEQ", allocationSize = 1)
     Long id;
 
     @Column(nullable = false)

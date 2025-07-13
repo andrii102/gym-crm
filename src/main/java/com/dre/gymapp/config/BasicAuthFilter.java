@@ -29,7 +29,7 @@ public class BasicAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        if (path.contains("api/auth")) {
+        if (path.contains("api/auth") || path.contains("api/swagger-ui")) {
             filterChain.doFilter(request, response);
             return;
         }

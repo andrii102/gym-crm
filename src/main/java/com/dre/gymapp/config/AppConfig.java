@@ -1,9 +1,13 @@
 package com.dre.gymapp.config;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -59,6 +63,21 @@ public class AppConfig {
     @Bean
     public JpaTransactionManager transactionManager(){
         return new JpaTransactionManager(entityManagerFactory().getObject());
+    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("GYM-CRM API")
+                        .version("1.0.0")
+                        .description("API documentation for GYM CRM")
+                        .license(new License().name("Apache 2.0").url("http://springdoc.org")));
+    }
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
     }
 }
 

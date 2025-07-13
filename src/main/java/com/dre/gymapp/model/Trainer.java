@@ -12,7 +12,8 @@ import java.util.List;
 @Entity
 public class Trainer {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "trainer_seq")
+    @SequenceGenerator(name = "trainer_seq", sequenceName = "Trainer_SEQ", allocationSize = 1)
     Long id;
 
     @ManyToOne

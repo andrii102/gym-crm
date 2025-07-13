@@ -13,7 +13,8 @@ import java.util.List;
 @Entity
 public class Trainee {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "trainee_seq")
+    @SequenceGenerator(name = "trainee_seq", sequenceName = "Trainee_SEQ", allocationSize = 1)
     Long id;
 
     LocalDate dateOfBirth;
