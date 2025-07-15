@@ -34,6 +34,9 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
 
         FilterRegistration.Dynamic basicAuthFilter = servletContext.addFilter("basicAuthFilter", new DelegatingFilterProxy("basicAuthFilter"));
         basicAuthFilter.addMappingForUrlPatterns(null, true, "/api/*");
+
+        FilterRegistration.Dynamic transactionLoggingFilter = servletContext.addFilter("transactionLoggingFilter", new DelegatingFilterProxy("transactionLoggingFilter"));
+        transactionLoggingFilter.addMappingForUrlPatterns(null, true, "/api/*");
     }
 
 }
