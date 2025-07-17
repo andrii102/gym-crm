@@ -5,15 +5,15 @@ import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingTypeDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
+import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
 import com.dre.gymapp.dto.trainer.TrainerProfileResponse;
 import com.dre.gymapp.dto.trainer.TrainerProfileUpdateRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
+import com.dre.gymapp.dto.trainings.TrainerTrainingsRequest;
+import com.dre.gymapp.dto.trainings.TrainerTrainingsResponse;
 import com.dre.gymapp.exception.BadRequestException;
 import com.dre.gymapp.exception.NotFoundException;
-import com.dre.gymapp.model.Trainee;
-import com.dre.gymapp.model.Trainer;
-import com.dre.gymapp.model.TrainingType;
-import com.dre.gymapp.model.User;
+import com.dre.gymapp.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,12 +43,15 @@ public class TrainerServiceTest {
     private TrainingTypeDao trainingTypeDao;
     @Mock
     private TraineeDao traineeDao;
+    @Mock
+    private TrainingService trainingService;
 
     private User testUser;
 
     @BeforeEach
     public void setUp() {
         testUser = new User("John", "Doe");
+        testUser.setId(1L);
         testUser.setUsername("john.doe");
         testUser.setPassword("<PASSWORD>");
     }
@@ -134,6 +138,11 @@ public class TrainerServiceTest {
         trainer.setUser(user);
         TrainingType trainingType = new TrainingType("RUNNING");
         trainer.setSpecialization(trainingType);
+        Trainee trainee = new Trainee();
+        User traineeUser = new User("Trainee", "User");
+        traineeUser.setUsername("trainee.user");
+        trainee.setUser(traineeUser);
+        trainer.setTrainees(List.of(trainee));
 
         TrainerProfileUpdateRequest request = new TrainerProfileUpdateRequest();
         request.setFirstName("NEW_FN");
@@ -144,6 +153,7 @@ public class TrainerServiceTest {
         User updatedUser = new User("NEW_FN", "NEW_LN");
         updatedUser.setUsername("newUsername");
         Trainer expectedTrainer = new Trainer(trainingType, updatedUser);
+        expectedTrainer.setTrainees(List.of(trainee));
 
         when(userService.getUserByUsername(any())).thenReturn(user);
         when(trainerDao.findById(any())).thenReturn(Optional.of(trainer));
@@ -201,4 +211,117 @@ public class TrainerServiceTest {
 
         verify(userService).setActive(any(), eq(false));
     }
+
+    @Test
+    void getTrainerByUsername_ReturnsTrainer() {
+        Trainer mockTrainer = new Trainer();
+        mockTrainer.setId(1L);
+
+        when(userService.getUserByUsername(testUser.getUsername())).thenReturn(testUser);
+        when(trainerDao.findById(1L)).thenReturn(Optional.of(mockTrainer));
+
+        Trainer result = trainerService.getTrainerByUsername(testUser.getUsername());
+
+        assertEquals(mockTrainer, result);
+    }
+
+    @Test
+    void getTrainerByUsername_WhenTrainerNotFound_ThrowsException() {
+        String username = "unknown";
+
+        User mockUser = new User();
+        mockUser.setId(999L);
+
+        when(userService.getUserByUsername(username)).thenReturn(mockUser);
+        when(trainerDao.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> trainerService.getTrainerByUsername(username));
+    }
+
+    @Test
+    void getTrainerProfileByUsername_ReturnsProfile() {
+        TrainingType trainingType = new TrainingType("RUNNING");
+        Trainer trainer = new Trainer();
+        trainer.setId(1L);
+        trainer.setSpecialization(trainingType);
+
+        Trainee trainee = new Trainee();
+        trainee.setUser(testUser);
+        trainer.setTrainees(List.of(trainee));
+
+        when(userService.getUserByUsername(testUser.getUsername())).thenReturn(testUser);
+        when(trainerDao.findById(1L)).thenReturn(Optional.of(trainer));
+
+        TrainerProfileResponse result = trainerService.getTrainerProfileByUsername(testUser.getUsername());
+
+        assertEquals("John", result.getFirstName());
+        assertEquals("Doe", result.getLastName());
+        assertTrue(result.isActive());
+
+        assertEquals(1, result.getTrainees().size());
+        assertEquals("john.doe", result.getTrainees().getFirst().getUsername());
+    }
+
+    @Test
+    void getTrainerTrainings_ReturnsListOfDto() {
+        TrainerTrainingsRequest request = new TrainerTrainingsRequest();
+        request.setTraineeUsername("trainee");
+
+        TrainingType type = new TrainingType("Cardio");
+        User traineeUser = new User();
+        traineeUser.setUsername("trainee");
+
+        Trainee trainee = new Trainee();
+        trainee.setUser(traineeUser);
+
+        Training training = new Training();
+        training.setTrainingName("Morning Cardio");
+        training.setTrainingDate(LocalDate.of(2024, 1, 1));
+        training.setTrainingDuration(60);
+        training.setTrainingType(type);
+        training.setTrainee(trainee);
+
+        when(trainingService.getTrainingsByParams(
+                        testUser.getUsername(), "trainee", null, null, null))
+                .thenReturn(List.of(training));
+
+        List<TrainerTrainingsResponse> result =
+                trainerService.getTrainerTrainings(testUser.getUsername(), request);
+
+        assertEquals(1, result.size());
+        TrainerTrainingsResponse dto = result.getFirst();
+
+        assertEquals("Morning Cardio", dto.getTrainingName());
+        assertEquals("trainee", dto.getTraineeUsername());
+        assertEquals("Cardio", dto.getTrainingType());
+    }
+
+    @Test
+    void getTrainersByUsernames_ReturnsListOfTrainers() {
+        List<String> usernames = List.of("trainer1", "trainer2");
+
+        UpdateTrainersListRequest request = new UpdateTrainersListRequest();
+        request.setTrainers(usernames);
+
+        Trainer trainer1 = new Trainer();
+        trainer1.setUser(testUser);
+        Trainer trainer2 = new Trainer();
+        User user = new User();
+        user.setUsername("trainer2");
+        trainer2.setUser(user);
+
+        List<Trainer> mockTrainers = List.of(trainer1, trainer2);
+
+        when(trainerDao.findByUsernames(usernames)).thenReturn(mockTrainers);
+
+        List<Trainer> result = trainerService.getTrainersByUsernames(request);
+
+        assertEquals(2, result.size());
+        assertEquals("john.doe", result.get(0).getUser().getUsername());
+        assertEquals("trainer2", result.get(1).getUser().getUsername());
+
+        verify(trainerDao).findByUsernames(usernames);
+    }
+
+
 }

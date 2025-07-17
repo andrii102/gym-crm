@@ -114,15 +114,6 @@ public class TraineeService {
         }
     }
 
-    // Gets trainee by username
-    public Trainee getTraineeByUsername(String username) {
-        logger.info("Getting trainee with username: {}", username);
-        User user = userService.getUserByUsername(username);
-        Trainee trainee = traineeDao.findByUserId(user.getId()).orElseThrow(() -> new NotFoundException("Trainee not found"));
-        logger.info("Trainee retrieved successfully");
-        return trainee;
-    }
-
     // Gets trainee profile fy username
     @Transactional(readOnly = true)
     public TraineeProfileResponse getTraineeProfileByUsername(String username) {

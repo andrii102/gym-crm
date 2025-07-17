@@ -130,4 +130,39 @@ class TraineeDaoTest {
         assertThrows(NotFoundException.class, () -> traineeDao.deleteById(NON_EXISTENT_ID));
     }
 
+    @Test
+    public void delete_ShouldDeleteTrainee() {
+        traineeDao.delete(testTrainee);
+        assertFalse(traineeDao.findById(testTrainee.getId()).isPresent());
+    }
+
+    @Test
+    public void findByUserId_ShouldReturnTrainee() {
+        Optional<Trainee> trainee = traineeDao.findByUserId(testTrainee.getUser().getId());
+
+        assertTrue(trainee.isPresent());
+        assertEquals("123 Main St", trainee.get().getAddress());
+        assertEquals(TEST_USERNAME, trainee.get().getUser().getUsername());
+    }
+
+    @Test
+    public void findByUserId_ShouldReturnEmptyOptional() {
+        Optional<Trainee> trainee = traineeDao.findByUserId(NON_EXISTENT_ID);
+        assertFalse(trainee.isPresent());
+    }
+
+    @Test
+    public void findByUsername_ShouldReturnTrainee() {
+        Optional<Trainee> trainee = traineeDao.findByUsername(testTrainee.getUser().getUsername());
+
+        assertTrue(trainee.isPresent());
+        assertEquals("123 Main St", trainee.get().getAddress());
+        assertEquals(TEST_USERNAME, trainee.get().getUser().getUsername());
+    }
+
+    @Test
+    public void findByUsername_ShouldReturnEmptyOptional() {
+        Optional<Trainee> trainee = traineeDao.findByUsername("non.existent.user");
+        assertFalse(trainee.isPresent());
+    }
 }

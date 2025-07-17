@@ -8,11 +8,10 @@ import com.dre.gymapp.dto.trainee.TraineeProfileResponse;
 import com.dre.gymapp.dto.trainee.TraineeProfileUpdateRequest;
 import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
+import com.dre.gymapp.dto.trainings.TraineeTrainingsRequest;
+import com.dre.gymapp.dto.trainings.TraineeTrainingsResponse;
 import com.dre.gymapp.exception.NotFoundException;
-import com.dre.gymapp.model.Trainee;
-import com.dre.gymapp.model.Trainer;
-import com.dre.gymapp.model.TrainingType;
-import com.dre.gymapp.model.User;
+import com.dre.gymapp.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +38,8 @@ public class TraineeServiceTest {
     private TrainerDao trainerDao;
     @Mock
     private UserService userService;
+    @Mock
+    private TrainingService trainingService;
 
     private User testUser;
 
@@ -83,6 +85,11 @@ public class TraineeServiceTest {
     public void updateTrainee_NonNullFieldsInRequest_ShouldUpdateTraineeRecord() {
         Trainee trainee = new Trainee();
         trainee.setUser(testUser);
+        Trainer trainer = new Trainer(new TrainingType("RUNNING"));
+        User trainerUser = new User("Trainer", "User");
+        trainerUser.setUsername("trainer.user");
+        trainer.setUser(trainerUser);
+        trainee.setTrainers(List.of(trainer));
 
         TraineeProfileUpdateRequest request = new TraineeProfileUpdateRequest();
         request.setFirstName("NEW_FN");
@@ -142,6 +149,27 @@ public class TraineeServiceTest {
                 () -> traineeService.getTraineeById(1L));
 
         verify(traineeDao).findById(any());
+    }
+
+    @Test
+    public void getTraineeByProfileByUsername_ShouldReturnTrainee() {
+        Trainee trainee = new Trainee();
+        trainee.setUser(testUser);
+        User trainerUser = new User("Trainer", "User");
+        trainerUser.setUsername("trainer.user");
+        Trainer trainer = new Trainer(new TrainingType("RUNNING"), trainerUser);
+        trainee.setTrainers(List.of(trainer));
+
+        when(traineeDao.findByUsername(any())).thenReturn(Optional.of(trainee));
+
+        TraineeProfileResponse result = traineeService.getTraineeProfileByUsername(testUser.getUsername());
+
+        assertNotNull(result);
+        assertEquals(trainee.getUser().getFirstName(), result.getFirstName());
+        assertEquals(trainee.getUser().getLastName(), result.getLastName());
+        assertEquals(trainee.getTrainers().size(), result.getTrainers().size());
+
+        verify(traineeDao).findByUsername(eq(testUser.getUsername()));
     }
 
     @Test
@@ -215,6 +243,31 @@ public class TraineeServiceTest {
         assertEquals(updatedTrainee.getTrainers().size(), result.size());
 
         verify(traineeDao).update(any());
+    }
+
+    @Test
+    public void getTraineeTrainings_ShouldReturnTraineeTrainings() {
+        Trainee trainee = new Trainee();
+        trainee.setUser(testUser);
+        User trainerUser = new User("Trainer", "User");
+        trainerUser.setUsername("trainer.user");
+        Trainer trainer = new Trainer();
+        trainer.setUser(trainerUser);
+        Training training = new Training(trainee, trainer, "Training Name",
+                new TrainingType("RUNNING"), LocalDate.of(2025, 1, 1), 60);
+        trainee.setTrainings(List.of(training));
+
+        TraineeTrainingsRequest request = new TraineeTrainingsRequest();
+
+
+        when(trainingService.getTrainingsByParams(any(), any(), any(), any(), any())).thenReturn(List.of(training));
+
+        List<TraineeTrainingsResponse> result = traineeService.getTraineeTrainings(trainee.getUser().getUsername(), request);
+
+        assertNotNull(result);
+        assertEquals(trainee.getTrainings().size(), result.size());
+
+        verify(trainingService).getTrainingsByParams(any(), any(), any(), any(), any());
     }
 
     @Test

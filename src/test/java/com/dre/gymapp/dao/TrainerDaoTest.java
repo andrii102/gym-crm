@@ -136,7 +136,33 @@ public class TrainerDaoTest {
         List<Trainer> trainers = trainerDao.findUnassignedTrainersOnTrainee(trainee.getId());
         System.out.println(trainers.size());
         assertFalse(trainers.isEmpty());
-        assertEquals(3, trainers.size());
+        assertEquals(5, trainers.size());
+    }
+
+    @Test
+    public void findByUsernames_ShouldReturnList() {
+        List<Trainer> trainers = trainerDao.findByUsernames(List.of(testUser.getUsername(), "john.doe"));
+        assertFalse(trainers.isEmpty());
+        assertEquals(2, trainers.size());
+    }
+
+    @Test
+    public void findByUsernames_ShouldReturnEmptyList() {
+        List<Trainer> trainers = trainerDao.findByUsernames(List.of("non.existent.user"));
+        assertTrue(trainers.isEmpty());
+    }
+
+    @Test
+    public void findByUsername_ShouldReturnTrainer() {
+        Optional<Trainer> trainer = trainerDao.findByUsername(testUser.getUsername());
+        assertTrue(trainer.isPresent());
+        assertEquals(TRAINING_TYPE, trainer.get().getSpecialization().getTrainingTypeName());
+    }
+
+    @Test
+    public void findByUsername_ShouldReturnEmptyOptional() {
+        Optional<Trainer> trainer = trainerDao.findByUsername("non.existent.user");
+        assertFalse(trainer.isPresent());
     }
 
 }

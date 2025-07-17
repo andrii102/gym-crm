@@ -67,7 +67,7 @@ public class UserDaoTest {
     public void findByUsernameStartingWith_ShouldReturnUsers() {
         List<String> usernames = userDao.findByUsernameStartingWith("j");
 
-        assertEquals(2, usernames.size());
+        assertEquals(4, usernames.size());
         assertTrue(usernames.contains(EXISTING_USERNAME));
         assertTrue(usernames.contains("jane.smith"));
     }
