@@ -10,10 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Schema(description = "Request object for registering a new trainer user")
 public class TrainerRegistrationRequest {
-    @Schema(description = "Username that will be used to login to the system")
-    @NotBlank(message = "Username is required")
-    private String username;
-
     @Schema(description = "First name of the trainer user")
     @NotBlank(message = "First name is required")
     private String firstName;

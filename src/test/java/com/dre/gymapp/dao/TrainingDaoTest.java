@@ -115,7 +115,7 @@ public class TrainingDaoTest {
 
         assertFalse(trainings.isEmpty());
         assertEquals(1, trainings.size());
-        assertEquals(TEST_TRAINING_NAME, trainings.getFirst().getTrainingName());
+        assertEquals(TEST_TRAINING_NAME, trainings.get(0).getTrainingName());
     }
 
     @Test

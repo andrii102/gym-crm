@@ -1,13 +1,12 @@
 package com.dre.gymapp;
 
 
-import com.dre.gymapp.config.AppConfig;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication(scanBasePackages = "com.dre.gymapp")
 public class GymApp {
     public static void main(String[] args) {
-        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-
+        SpringApplication.run(GymApp.class, args);
     }
 }

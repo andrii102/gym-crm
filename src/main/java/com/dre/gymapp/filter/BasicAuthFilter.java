@@ -30,8 +30,8 @@ public class BasicAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        // Skip authentication for auth endpoints
-        if (path.contains("api/auth")) {
+        // Skip authentication for auth and docs endpoints
+        if (path.contains("api/auth") || path.contains("swagger") || path.contains("api-docs")) {
             filterChain.doFilter(request, response);
             return;
         }

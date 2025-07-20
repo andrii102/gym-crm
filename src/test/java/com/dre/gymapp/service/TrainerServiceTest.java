@@ -259,7 +259,7 @@ public class TrainerServiceTest {
         assertTrue(result.isActive());
 
         assertEquals(1, result.getTrainees().size());
-        assertEquals("john.doe", result.getTrainees().getFirst().getUsername());
+        assertEquals("john.doe", result.getTrainees().get(0).getUsername());
     }
 
     @Test
@@ -289,7 +289,7 @@ public class TrainerServiceTest {
                 trainerService.getTrainerTrainings(testUser.getUsername(), request);
 
         assertEquals(1, result.size());
-        TrainerTrainingsResponse dto = result.getFirst();
+        TrainerTrainingsResponse dto = result.get(0);
 
         assertEquals("Morning Cardio", dto.getTrainingName());
         assertEquals("trainee", dto.getTraineeUsername());
