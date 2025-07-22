@@ -1,0 +1,60 @@
+spring:
+  profiles:
+    active: local
+
+server:
+  servlet:
+    context-path: /gym-app
+
+---
+
+spring:
+  config:
+    activate:
+     on-profile: local
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/gym-app-dev
+    username: ${DB_USER}
+    password: ${DB_PASS}
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/gym-app
+    username: ${DB_PROD_USER}
+    password: ${DB_PROD_PASS}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: never

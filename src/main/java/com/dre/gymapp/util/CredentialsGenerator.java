@@ -19,7 +19,7 @@ public class CredentialsGenerator {
     }
 
     public String generatePassword() {
-        String chars = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890@_-+-/#$%&()!";
+        String chars = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890@_-/#$()!";
         StringBuilder sb = new StringBuilder();
         Random random = new Random();
         for(int i = 0; i < 10; i++) {
