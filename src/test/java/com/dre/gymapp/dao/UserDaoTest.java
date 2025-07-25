@@ -1,15 +1,13 @@
 package com.dre.gymapp.dao;
 
-import com.dre.gymapp.config.H2TestConfig;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -17,9 +15,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = H2TestConfig.class)
+@SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 public class UserDaoTest {
 
     @Autowired

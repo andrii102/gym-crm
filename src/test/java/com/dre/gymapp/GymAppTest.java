@@ -1,16 +1,14 @@
 package com.dre.gymapp;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+@SpringBootTest
+@ActiveProfiles("test")
 public class GymAppTest {
 
     @Test
     void contextLoadsSuccessfully() {
-        ApplicationContext context = new AnnotationConfigApplicationContext(GymApp.class);
-        assertNotNull(context, "The application context should not be null");
     }
 }
