@@ -6,6 +6,19 @@ server:
   servlet:
     context-path: /gym-app
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
 ---
 
 spring:
