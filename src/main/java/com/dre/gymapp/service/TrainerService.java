@@ -12,6 +12,7 @@ import com.dre.gymapp.dto.trainer.TrainerProfileUpdateRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
 import com.dre.gymapp.dto.trainings.TrainerTrainingsRequest;
 import com.dre.gymapp.dto.trainings.TrainerTrainingsResponse;
+import com.dre.gymapp.dto.user.GeneratedUser;
 import com.dre.gymapp.exception.BadRequestException;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
@@ -51,24 +52,18 @@ public class TrainerService {
     public RegistrationResponse createTrainer(TrainerRegistrationRequest request) {
         logger.info("Creating new trainer");
 
-        User user = userService.createUser(request.getFirstName(), request.getLastName());
+        GeneratedUser generatedUser = userService.createUser(request.getFirstName(), request.getLastName());
 
-        Trainer trainer = new Trainer(trainingTypeDao.findById(request.getSpecializationId()), user);
+        Trainer trainer = new Trainer(trainingTypeDao.findById(request.getSpecializationId()), generatedUser.getUser());
         trainerDao.save(trainer);
 
         logger.info("Trainer created successfully");
 
-        return new RegistrationResponse(user.getUsername(), user.getPassword());
-    }
-
-    public void changePassword(String username,String newPassword) {
-        logger.info("Changing password for trainer with username: {}", username);
-        User user = userService.getUserByUsername(username);
-        userService.changePassword(user, newPassword);
-        logger.info("Password changed successfully");
+        return new RegistrationResponse(generatedUser.getUser().getUsername(), generatedUser.getRawPassword());
     }
 
     // Gets a trainer by their ID, throws exception if not found
+    @Deprecated // method is used only in tests
     public Trainer getTrainerById(Long id) {
         logger.info("Getting trainer with ID: {}", id);
         try {
@@ -79,6 +74,7 @@ public class TrainerService {
         }
     }
 
+    @Deprecated // method is used only in tests
     public Trainer getTrainerByUsername(String username) {
         logger.info("Getting trainer with username: {}", username);
         User user = userService.getUserByUsername(username);
@@ -109,7 +105,8 @@ public class TrainerService {
         );
     }
 
-    // Gets a list of all trainers 
+    // Gets a list of all trainers
+    @Deprecated // method is used only in tests
     public List<Trainer> getAllTrainers() {
         logger.info("Getting all trainers");
         return trainerDao.findAll();
@@ -152,6 +149,7 @@ public class TrainerService {
     }
 
     // Returns list of trainers
+    @Deprecated // method is used only in tests
     public List<Trainer> getTrainersByUsernames(UpdateTrainersListRequest trainerList) {
         logger.info("Getting trainers by usernames");
         List<Trainer> trainers = trainerDao.findByUsernames(trainerList.getTrainers());

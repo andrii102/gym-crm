@@ -4,7 +4,7 @@ import com.dre.gymapp.dto.auth.LoginChangeRequest;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
 import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
-import com.dre.gymapp.model.User;
+import com.dre.gymapp.service.AuthenticationService;
 import com.dre.gymapp.service.TraineeService;
 import com.dre.gymapp.service.TrainerService;
 import com.dre.gymapp.service.UserService;
@@ -29,12 +29,14 @@ public class AuthController {
     private final UserService userService;
     private final TraineeService traineeService;
     private final TrainerService trainerService;
+    private final AuthenticationService authenticationService;
 
     @Autowired
-    public AuthController(UserService userService, TraineeService traineeService, TrainerService trainerService) {
+    public AuthController(UserService userService, TraineeService traineeService, TrainerService trainerService, AuthenticationService authenticationService) {
         this.userService = userService;
         this.traineeService = traineeService;
         this.trainerService = trainerService;
+        this.authenticationService = authenticationService;
     }
 
     @Operation(summary = "Register a new trainee", description = "Creates a new user and trainee profile.")
@@ -71,7 +73,7 @@ public class AuthController {
     @GetMapping("/login")
     public ResponseEntity<String> login(@Parameter(description = "User's username") @RequestParam("username") String username,
                                         @Parameter(description = "User's password") @RequestParam("password") String password) {
-        userService.authenticateUser(username, password);
+        authenticationService.authenticate(username, password);
         return ResponseEntity.ok("Login Successful");
     }
 
@@ -82,9 +84,9 @@ public class AuthController {
     })
     @PutMapping("/login")
     public ResponseEntity<String> changeLogin(@RequestBody @Valid LoginChangeRequest request ) {
-        User user = userService.authenticateUser(request.getUsername(), request.getOldPassword());
+        authenticationService.authenticate(request.getUsername(), request.getOldPassword());
 
-        userService.changePassword(user, request.getNewPassword());
+        userService.changePassword(request.getUsername(), request.getNewPassword());
 
         return ResponseEntity.ok("Login changed successfully");
     }

@@ -11,6 +11,7 @@ import com.dre.gymapp.dto.trainer.TrainerProfileUpdateRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
 import com.dre.gymapp.dto.trainings.TrainerTrainingsRequest;
 import com.dre.gymapp.dto.trainings.TrainerTrainingsResponse;
+import com.dre.gymapp.dto.user.GeneratedUser;
 import com.dre.gymapp.exception.BadRequestException;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.*;
@@ -58,7 +59,7 @@ public class TrainerServiceTest {
 
     @Test
     public void createTrainer_ShouldCreateNewTrainerRecord(){
-        when(userService.createUser("John", "Doe")).thenReturn(testUser);
+        when(userService.createUser("John", "Doe")).thenReturn(new GeneratedUser(testUser, testUser.getPassword()));
         when(trainingTypeDao.findById(any())).thenReturn(new TrainingType());
 
         RegistrationResponse result = trainerService.createTrainer(new TrainerRegistrationRequest("John", "Doe", null));
@@ -68,13 +69,6 @@ public class TrainerServiceTest {
         assertEquals(testUser.getPassword(), result.getPassword());
 
         verify(trainerDao).save(any(Trainer.class));
-    }
-
-    @Test
-    public void changePassword_ShouldChangePassword(){
-        trainerService.changePassword(testUser.getFirstName(), "newPassword");
-
-        verify(userService).changePassword(any(), any());
     }
 
     @Test
