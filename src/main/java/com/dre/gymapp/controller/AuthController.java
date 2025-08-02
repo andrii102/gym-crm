@@ -67,14 +67,14 @@ public class AuthController {
 
     @Operation(summary = "Authenticate user", description = "Checks if the provided credentials are valid.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login successful"),
+            @ApiResponse(responseCode = "200", description = "Returns jwt"),
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     @GetMapping("/login")
     public ResponseEntity<String> login(@Parameter(description = "User's username") @RequestParam("username") String username,
                                         @Parameter(description = "User's password") @RequestParam("password") String password) {
-        authenticationService.authenticate(username, password);
-        return ResponseEntity.ok("Login Successful");
+        String jwt = authenticationService.authenticate(username, password);
+        return ResponseEntity.ok(jwt);
     }
 
     @Operation(summary = "Change user password", description = "Authenticates the user and updates the password.")
