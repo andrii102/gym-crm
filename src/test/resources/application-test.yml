@@ -17,3 +17,7 @@ spring:
     init:
       data-locations: classpath:test-data.sql
       mode: always
+jwt:
+  secret: "0123456789ABCDEF0123456789ABCDEF"
+  expiration: 15m
+  refresh-expiration: 24h

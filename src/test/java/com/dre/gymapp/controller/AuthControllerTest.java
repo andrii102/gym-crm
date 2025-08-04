@@ -1,9 +1,6 @@
 package com.dre.gymapp.controller;
 
-import com.dre.gymapp.dto.auth.LoginChangeRequest;
-import com.dre.gymapp.dto.auth.RegistrationResponse;
-import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
-import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
+import com.dre.gymapp.dto.auth.*;
 import com.dre.gymapp.service.AuthenticationService;
 import com.dre.gymapp.service.TraineeService;
 import com.dre.gymapp.service.TrainerService;
@@ -16,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -68,7 +64,7 @@ public class AuthControllerTest {
         String username = "john.doe";
         String password = "password";
 
-        ResponseEntity<String> response = authController.login(username, password);
+        ResponseEntity<LoginResponse> response = authController.login(username, password);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -90,7 +86,7 @@ public class AuthControllerTest {
     public void changeLogin_ShouldChangeLogin(){
         String username = "john.doe";
         LoginChangeRequest request = new LoginChangeRequest(username, "oldPassword",  "newPassword");
-        Authentication mockAuth = mock(Authentication.class);
+        LoginResponse mockAuth = mock(LoginResponse.class);
 
         when(authenticationService.authenticate("john.doe", "oldPassword")).thenReturn(mockAuth);
 
