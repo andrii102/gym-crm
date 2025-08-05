@@ -35,8 +35,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests(request -> request
-                    .requestMatchers("/api/auth/**","/actuator/**",
-                            "/swagger-ui.html", "/v3/api-docs").permitAll()
+                    .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh"
+                            ,"/actuator/**", "/swagger-ui.html", "/v3/api-docs").permitAll()
                     .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class);

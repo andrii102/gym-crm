@@ -45,7 +45,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void registerTrainer_ShouldCreateTrainer(){
+    public void registerTrainer_ShouldCreateTrainer() {
         TrainerRegistrationRequest request = new TrainerRegistrationRequest("John", "Doe", 1L);
         RegistrationResponse expectedResponse = new RegistrationResponse("john.doe", "password");
 
@@ -60,7 +60,7 @@ public class AuthControllerTest {
 
 
     @Test
-    public void login_ShouldLogin(){
+    public void login_ShouldLogin() {
         String username = "john.doe";
         String password = "password";
 
@@ -106,5 +106,36 @@ public class AuthControllerTest {
 
         assertThrows(BadCredentialsException.class,() -> authController.changeLogin(request));
     }
+
+    @Test
+    public void refresh_ShouldRefresh() {
+        String refreshToken = "refreshToken";
+        TokenRefreshRequest request = new TokenRefreshRequest();
+        request.setRefreshToken(refreshToken);
+        LoginResponse expectedResponse = new LoginResponse("accessToken", refreshToken);
+
+        when(authenticationService.refreshToken(refreshToken)).thenReturn(expectedResponse);
+
+        ResponseEntity<LoginResponse> response = authController.refresh(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+    }
+
+    @Test
+    public void logout_ShouldLogout() {
+        String refreshToken = "refreshToken";
+        LogoutRequest request = new LogoutRequest();
+        request.setRefreshToken(refreshToken);
+
+        ResponseEntity<String> response = authController.logout(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        verify(authenticationService).logout(refreshToken);
+    }
+
 }
 
