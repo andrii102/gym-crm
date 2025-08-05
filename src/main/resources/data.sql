@@ -1,16 +1,16 @@
 -- Insert into users
 INSERT INTO users (id, first_name, last_name, username, password, is_active)
-VALUES (1, 'John', 'Doe', 'john.doe', 'pass123', TRUE) ON CONFLICT (id) DO NOTHING;
+VALUES (1, 'John', 'Doe', 'john.doe', '$2a$12$K6ba191yQ/dIxUkk2jkxuOkE/p8GXcwHQmngLM1hahT6ag8dvf.Ae', TRUE) ON CONFLICT (id) DO NOTHING;    -- pass123
 INSERT INTO users (id, first_name, last_name, username, password, is_active)
-VALUES (2, 'Jane', 'Smith', 'jane.smith', 'pass456', TRUE) ON CONFLICT (id) DO NOTHING;
+VALUES (2, 'Jane', 'Smith', 'jane.smith', '$2a$12$VwAJCap5EXK1GWYTc82Ctuhv2SUqtNRxd.wRt4jDnaU36VifNIkTy', TRUE) ON CONFLICT (id) DO NOTHING;    -- pass456
 INSERT INTO users (id, first_name, last_name, username, password, is_active)
-VALUES (3, 'Mike', 'Brown', 'mike.brown', 'pass789', TRUE) ON CONFLICT (id) DO NOTHING;
+VALUES (3, 'Mike', 'Brown', 'mike.brown', '$2a$12$h8Qi3AxlSl3fZ.CmRvpvfux.Qv21doYN8HvXvD3a4mTHFgNVg59t.', TRUE) ON CONFLICT (id) DO NOTHING;    --pass789
 INSERT INTO users (id, first_name, last_name, username, password, is_active)
-VALUES (4, 'Emma', 'White', 'emma.white', 'pass321', TRUE) ON CONFLICT (id) DO NOTHING;
+VALUES (4, 'Emma', 'White', 'emma.white', '$2a$12$SFPGKmJ/YXobesc4hDjb/.cHt9cWNg8/InRMScuDWzxEVxyfAkybO', TRUE) ON CONFLICT (id) DO NOTHING;    --pass321
 INSERT INTO users (id, first_name, last_name, username, password, is_active)
-VALUES (5, 'Jessica', 'Black', 'jessica.black', 'pass654', TRUE) ON CONFLICT (id) DO NOTHING;
+VALUES (5, 'Jessica', 'Black', 'jessica.black', '$2a$12$7N.9t0j3XgH/wWbpqWmBPeLvHne7vAr.jrcO9a5hLLvOgBXuYml0u', TRUE) ON CONFLICT (id) DO NOTHING;  --pass654
 INSERT INTO users (id, first_name, last_name, username, password, is_active)
-VALUES (6, 'Jacob', 'Green', 'jacob.green', 'pass987', TRUE) ON CONFLICT (id) DO NOTHING;
+VALUES (6, 'Jacob', 'Green', 'jacob.green', '$2a$12$TLay2hlDPV/F2n4bStJml.bGZrN8Qws1V3jXNpc.G/UkXeYkoe6Iy', TRUE) ON CONFLICT (id) DO NOTHING;  --pass987
 
 -- Insert into training_type
 INSERT INTO training_type (id, training_type_name) VALUES (1, 'Yoga') ON CONFLICT (id) DO NOTHING;

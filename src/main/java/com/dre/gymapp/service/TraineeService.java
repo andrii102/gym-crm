@@ -10,6 +10,7 @@ import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
 import com.dre.gymapp.dto.trainings.TraineeTrainingsRequest;
 import com.dre.gymapp.dto.trainings.TraineeTrainingsResponse;
+import com.dre.gymapp.dto.user.GeneratedUser;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
@@ -46,15 +47,15 @@ public class TraineeService {
     public RegistrationResponse createTrainee(TraineeRegistrationRequest request) {
         logger.info("Creating new trainee");
 
-        User user = userService.createUser(request.getFirstName(), request.getLastName());
+        GeneratedUser generatedUser = userService.createUser(request.getFirstName(), request.getLastName());
 
         Trainee trainee = new Trainee(request.getDateOfBirth(), request.getAddress());
-        trainee.setUser(user);
+        trainee.setUser(generatedUser.getUser());
         traineeDao.save(trainee);
 
         logger.info("Trainee created successfully");
 
-        return new RegistrationResponse(user.getUsername(), user.getPassword());
+        return new RegistrationResponse(generatedUser.getUser().getUsername(), generatedUser.getRawPassword());
     }
 
     // Updates an existing trainee record
@@ -95,16 +96,9 @@ public class TraineeService {
         );
     }
 
-    // Change password
-    public void changePassword(String username, String password, String newPassword) {
-        logger.info("Changing password for trainee with username: {}", username);
-        User user = userService.authenticateUser(username, password);
-        userService.changePassword(user, newPassword);
-        logger.info("Password changed successfully");
-    }
-
     // Gets a trainee by their ID, throws exception if not found
-    public Trainee getTraineeById( Long id) {
+    @Deprecated // method is used only in tests
+    public Trainee getTraineeById(Long id) {
         logger.info("Getting trainee with ID: {}", id);
         try {
             return traineeDao.findById(id).orElseThrow(() -> new NotFoundException("Trainee not found"));
@@ -138,9 +132,9 @@ public class TraineeService {
     }
 
     // Gets a list of all trainees
-    public List<Trainee> getAllTrainees(String username, String password) {
+    @Deprecated // method is used only in tests
+    public List<Trainee> getAllTrainees() {
         logger.info("Getting all trainees");
-        userService.authenticateUser(username, password);
         return traineeDao.findAll();
     }
 

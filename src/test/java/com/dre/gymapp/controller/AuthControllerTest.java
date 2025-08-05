@@ -1,11 +1,7 @@
 package com.dre.gymapp.controller;
 
-import com.dre.gymapp.dto.auth.LoginChangeRequest;
-import com.dre.gymapp.dto.auth.RegistrationResponse;
-import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
-import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
-import com.dre.gymapp.exception.UnauthorizedException;
-import com.dre.gymapp.model.User;
+import com.dre.gymapp.dto.auth.*;
+import com.dre.gymapp.service.AuthenticationService;
 import com.dre.gymapp.service.TraineeService;
 import com.dre.gymapp.service.TrainerService;
 import com.dre.gymapp.service.UserService;
@@ -16,10 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthControllerTest {
@@ -27,6 +23,8 @@ public class AuthControllerTest {
     private AuthController authController;
     @Mock
     private UserService userService;
+    @Mock
+    private AuthenticationService authenticationService;
     @Mock
     private TraineeService traineeService;
     @Mock
@@ -47,7 +45,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void registerTrainer_ShouldCreateTrainer(){
+    public void registerTrainer_ShouldCreateTrainer() {
         TrainerRegistrationRequest request = new TrainerRegistrationRequest("John", "Doe", 1L);
         RegistrationResponse expectedResponse = new RegistrationResponse("john.doe", "password");
 
@@ -62,16 +60,16 @@ public class AuthControllerTest {
 
 
     @Test
-    public void login_ShouldLogin(){
+    public void login_ShouldLogin() {
         String username = "john.doe";
         String password = "password";
 
-        ResponseEntity<String> response = authController.login(username, password);
+        ResponseEntity<LoginResponse> response = authController.login(username, password);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        verify(userService).authenticateUser(username, password);
+        verify(authenticationService).authenticate(username, password);
     }
 
     @Test
@@ -79,34 +77,65 @@ public class AuthControllerTest {
         String username = "john.doe";
         String password = "password";
 
-        when(userService.authenticateUser(username, password)).thenThrow(UnauthorizedException.class);
+        when(authenticationService.authenticate(username, password)).thenThrow(BadCredentialsException.class);
 
-        assertThrows(UnauthorizedException.class, () -> authController.login(username, password));
+        assertThrows(BadCredentialsException.class, () -> authController.login(username, password));
     }
 
     @Test
     public void changeLogin_ShouldChangeLogin(){
-        LoginChangeRequest request = new LoginChangeRequest("john.doe", "oldPassword",  "newPassword");
-        User user = new User("john.doe", "password");
+        String username = "john.doe";
+        LoginChangeRequest request = new LoginChangeRequest(username, "oldPassword",  "newPassword");
+        LoginResponse mockAuth = mock(LoginResponse.class);
 
-        when(userService.authenticateUser("john.doe", "oldPassword")).thenReturn(user);
+        when(authenticationService.authenticate("john.doe", "oldPassword")).thenReturn(mockAuth);
 
         ResponseEntity<String> response = authController.changeLogin(request);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        verify(userService).changePassword(user, "newPassword");
+        verify(userService).changePassword(username, "newPassword");
     }
 
     @Test
     public void changeLogin_ShouldNotChangeLogin(){
         LoginChangeRequest request = new LoginChangeRequest("john.doe", "oldPassword",  "newPassword");
 
-        when(userService.authenticateUser("john.doe", "oldPassword")).thenThrow(UnauthorizedException.class);
+        when(authenticationService.authenticate("john.doe", "oldPassword")).thenThrow(BadCredentialsException.class);
 
-        assertThrows(UnauthorizedException.class,() -> authController.changeLogin(request));
-
+        assertThrows(BadCredentialsException.class,() -> authController.changeLogin(request));
     }
+
+    @Test
+    public void refresh_ShouldRefresh() {
+        String refreshToken = "refreshToken";
+        TokenRefreshRequest request = new TokenRefreshRequest();
+        request.setRefreshToken(refreshToken);
+        LoginResponse expectedResponse = new LoginResponse("accessToken", refreshToken);
+
+        when(authenticationService.refreshToken(refreshToken)).thenReturn(expectedResponse);
+
+        ResponseEntity<LoginResponse> response = authController.refresh(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+    }
+
+    @Test
+    public void logout_ShouldLogout() {
+        String refreshToken = "refreshToken";
+        LogoutRequest request = new LogoutRequest();
+        request.setRefreshToken(refreshToken);
+
+        ResponseEntity<String> response = authController.logout(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        verify(authenticationService).logout(refreshToken);
+    }
+
 }
 

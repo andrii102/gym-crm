@@ -10,6 +10,7 @@ import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
 import com.dre.gymapp.dto.trainer.TrainerShortProfile;
 import com.dre.gymapp.dto.trainings.TraineeTrainingsRequest;
 import com.dre.gymapp.dto.trainings.TraineeTrainingsResponse;
+import com.dre.gymapp.dto.user.GeneratedUser;
 import com.dre.gymapp.exception.NotFoundException;
 import com.dre.gymapp.model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +53,7 @@ public class TraineeServiceTest {
 
     @Test
     public void createTrainee_ShouldCreateNewTraineeRecord() {
-        when(userService.createUser(any(), any())).thenReturn(testUser);
+        when(userService.createUser(any(), any())).thenReturn(new GeneratedUser(testUser, testUser.getPassword()));
 
         RegistrationResponse result = traineeService.createTrainee(new TraineeRegistrationRequest("John", "Doe"));
 
@@ -119,15 +120,6 @@ public class TraineeServiceTest {
     }
 
     @Test
-    public void changePassword_ShouldChangePassword(){
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
-
-        traineeService.changePassword(testUser.getFirstName(), testUser.getPassword(), "newPassword");
-
-        verify(userService).changePassword(any(), any());
-    }
-
-    @Test
     public void getTraineeById_ShouldReturnTrainee() {
         Trainee trainee = new Trainee();
 
@@ -174,9 +166,8 @@ public class TraineeServiceTest {
 
     @Test
     public void getAllTrainees_ShouldReturnAllTrainees() {
-        when(userService.authenticateUser(any(), any())).thenReturn(testUser);
         when(traineeDao.findAll()).thenReturn(List.of(new Trainee(), new Trainee()));
-        List<Trainee> trainees = traineeService.getAllTrainees(testUser.getFirstName(), testUser.getPassword());
+        List<Trainee> trainees = traineeService.getAllTrainees();
 
         assertNotNull(trainees);
         assertEquals(2, trainees.size());

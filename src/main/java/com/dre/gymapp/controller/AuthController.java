@@ -1,10 +1,7 @@
 package com.dre.gymapp.controller;
 
-import com.dre.gymapp.dto.auth.LoginChangeRequest;
-import com.dre.gymapp.dto.auth.RegistrationResponse;
-import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
-import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
-import com.dre.gymapp.model.User;
+import com.dre.gymapp.dto.auth.*;
+import com.dre.gymapp.service.AuthenticationService;
 import com.dre.gymapp.service.TraineeService;
 import com.dre.gymapp.service.TrainerService;
 import com.dre.gymapp.service.UserService;
@@ -29,12 +26,14 @@ public class AuthController {
     private final UserService userService;
     private final TraineeService traineeService;
     private final TrainerService trainerService;
+    private final AuthenticationService authenticationService;
 
     @Autowired
-    public AuthController(UserService userService, TraineeService traineeService, TrainerService trainerService) {
+    public AuthController(UserService userService, TraineeService traineeService, TrainerService trainerService, AuthenticationService authenticationService) {
         this.userService = userService;
         this.traineeService = traineeService;
         this.trainerService = trainerService;
+        this.authenticationService = authenticationService;
     }
 
     @Operation(summary = "Register a new trainee", description = "Creates a new user and trainee profile.")
@@ -65,14 +64,15 @@ public class AuthController {
 
     @Operation(summary = "Authenticate user", description = "Checks if the provided credentials are valid.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login successful"),
+            @ApiResponse(responseCode = "200", description = "User authenticated successfully",
+            content = @Content(schema = @Schema(implementation = LoginResponse.class))),
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     @GetMapping("/login")
-    public ResponseEntity<String> login(@Parameter(description = "User's username") @RequestParam("username") String username,
+    public ResponseEntity<LoginResponse> login(@Parameter(description = "User's username") @RequestParam("username") String username,
                                         @Parameter(description = "User's password") @RequestParam("password") String password) {
-        userService.authenticateUser(username, password);
-        return ResponseEntity.ok("Login Successful");
+        LoginResponse response = authenticationService.authenticate(username, password);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Change user password", description = "Authenticates the user and updates the password.")
@@ -82,11 +82,34 @@ public class AuthController {
     })
     @PutMapping("/login")
     public ResponseEntity<String> changeLogin(@RequestBody @Valid LoginChangeRequest request ) {
-        User user = userService.authenticateUser(request.getUsername(), request.getOldPassword());
+        authenticationService.authenticate(request.getUsername(), request.getOldPassword());
 
-        userService.changePassword(user, request.getNewPassword());
+        userService.changePassword(request.getUsername(), request.getNewPassword());
 
         return ResponseEntity.ok("Login changed successfully");
+    }
+
+    @Operation(summary = "Refresh access token", description = "Refreshes the access token using the refresh token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token refreshed successfully",
+            content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid refresh token", content = @Content)
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
+        LoginResponse response = authenticationService.refreshToken(request.getRefreshToken());
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Logout", description = "Invalidates the refresh token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Logout successful"),
+            @ApiResponse(responseCode = "401", description = "Invalid refresh token", content = @Content)
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@Valid @RequestBody LogoutRequest request) {
+        authenticationService.logout(request.getRefreshToken());
+        return ResponseEntity.ok("Logout successful");
     }
 
 }

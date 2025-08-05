@@ -1,8 +1,8 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dao.UserDao;
+import com.dre.gymapp.dto.user.GeneratedUser;
 import com.dre.gymapp.exception.NotFoundException;
-import com.dre.gymapp.exception.UnauthorizedException;
 import com.dre.gymapp.model.User;
 import com.dre.gymapp.util.CredentialsGenerator;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +29,9 @@ public class UserServiceTest {
 
     @Mock
     private CredentialsGenerator credentialsGenerator;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
     
     private User testUser;
     
@@ -39,43 +43,21 @@ public class UserServiceTest {
     }
 
     @Test
-    public void authenticateUser_ShouldReturnUser_PasswordMatches() {
-        when(userDao.findByUsername(testUser.getUsername())).thenReturn(Optional.of(testUser));
-
-        User authenticatedUser = userService.authenticateUser(testUser.getUsername(), testUser.getPassword());
-
-        assertNotNull(authenticatedUser);
-        assertEquals(testUser.getUsername(), authenticatedUser.getUsername());
-    }
-
-    @Test
-    public void authenticateUser_ShouldThrowException_PasswordDoesNotMatch() {
-        when(userDao.findByUsername(testUser.getUsername())).thenReturn(Optional.of(testUser));
-
-        assertThrows(UnauthorizedException.class, () -> userService.authenticateUser(testUser.getUsername(), "wrong-password"));
-    }
-
-    @Test
-    public void authenticateUser_ShouldThrowException_UserNotFound() {
-        when(userDao.findByUsername(testUser.getUsername())).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> userService.authenticateUser(testUser.getUsername(), testUser.getPassword()));
-    }
-
-    @Test
     public void createUser_ShouldReturnUser_UserCreated() {
         when(credentialsGenerator.generateUsername(testUser.getFirstName(), testUser.getLastName(),
                 userDao.findByUsernameStartingWith(testUser.getUsername()))).thenReturn(testUser.getUsername())
                 .thenReturn("john.doe");
         when(credentialsGenerator.generatePassword()).thenReturn(testUser.getPassword())
                 .thenReturn("<PASSWORD>");
+        when(passwordEncoder.encode(testUser.getPassword())).thenReturn(testUser.getPassword());
 
-        User createdUser = userService.createUser(testUser.getFirstName(), testUser.getLastName());
+        GeneratedUser generatedUser = userService.createUser(testUser.getFirstName(), testUser.getLastName());
 
-        assertNotNull(createdUser);
-        assertEquals(testUser.getFirstName(), createdUser.getFirstName());
-        assertEquals(testUser.getLastName(), createdUser.getLastName());
-        assertEquals(testUser.getUsername(), createdUser.getUsername());
-        assertEquals(testUser.getPassword(), createdUser.getPassword());
+        assertNotNull(generatedUser);
+        assertEquals(testUser.getFirstName(), generatedUser.getUser().getFirstName());
+        assertEquals(testUser.getLastName(), generatedUser.getUser().getLastName());
+        assertEquals(testUser.getUsername(), generatedUser.getUser().getUsername());
+        assertEquals(testUser.getPassword(), generatedUser.getUser().getPassword());
     }
 
     @Test
@@ -101,8 +83,9 @@ public class UserServiceTest {
     @Test
     public void changePassword_ShouldUpdatePassword() {
         String password = testUser.getPassword();
+        when(userDao.findByUsername(any())).thenReturn(Optional.of(testUser));
 
-        userService.changePassword(testUser, "newPassword");
+        userService.changePassword(testUser.getUsername(), "newPassword");
 
         assertNotEquals(password, testUser.getPassword());
         verify(userDao).update(testUser);

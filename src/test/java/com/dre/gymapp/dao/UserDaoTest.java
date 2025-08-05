@@ -7,6 +7,7 @@ import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,8 +118,8 @@ public class UserDaoTest {
     public void update_ShouldThrowForNewUser() {
         User newUser = new User();
         newUser.setUsername("new.user");
-
-        assertThrows(IllegalArgumentException.class, () -> userDao.update(newUser));
+        // Spring wraps IllegalArgumentException into InvalidDataAccessApiUsageException
+        assertThrows(InvalidDataAccessApiUsageException.class, () -> userDao.update(newUser));
     }
 
     @Test

@@ -42,7 +42,7 @@ public class UserDao{
     // Updates an existing user in the database if found
     @Transactional
     public User update(User entity) {
-        if (entity.getId() == null) {
+        if (entity == null || entity.getId() == null) {
          throw new IllegalArgumentException("User ID cannot be null for update");
         }
         return entityManager.merge(entity);
