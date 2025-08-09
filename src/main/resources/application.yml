@@ -1,15 +1,13 @@
 spring:
-  profiles:
-    active: local
-  data:
-    redis:
-      host: localhost
-      port: 6379
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   servlet:
     context-path: /gym-app
-
 
 management:
   endpoints:
@@ -29,12 +27,13 @@ jwt:
   expiration: 15m
   refresh-expiration: 24h
 
+
 ---
 
 spring:
   config:
     activate:
-     on-profile: local
+      on-profile: local
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5433/gym-app-dev
@@ -44,14 +43,15 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
     defer-datasource-initialization: true
   sql:
     init:
       mode: always
       data-locations: classpath:data.sql
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 springdoc:
   api-docs:
@@ -75,9 +75,35 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
   sql:
     init:
       mode: never
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://postgres:5432/gym-app-dev
+    username: ${DB_USER}
+    password: ${DB_PASS}
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+  data:
+    redis:
+      host: redis
+      port: 6379
