@@ -7,6 +7,7 @@ import com.dre.gymapp.service.TrainerService;
 import com.dre.gymapp.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,9 +15,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -27,6 +33,9 @@ public class AuthController {
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final AuthenticationService authenticationService;
+
+    @Value("${jwt.refresh-expiration}")
+    private Duration refreshExpiration;
 
     @Autowired
     public AuthController(UserService userService, TraineeService traineeService, TrainerService trainerService, AuthenticationService authenticationService) {
@@ -68,11 +77,20 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = LoginResponse.class))),
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
-    @GetMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Parameter(description = "User's username") @RequestParam("username") String username,
-                                        @Parameter(description = "User's password") @RequestParam("password") String password) {
-        LoginResponse response = authenticationService.authenticate(username, password);
-        return ResponseEntity.ok(response);
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Parameter(description = "User's credentials for authentication")
+                                                   @RequestBody LoginRequest request) {
+        LoginResult loginResult = authenticationService.authenticate(request.getUsername(), request.getPassword());
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", loginResult.getRefreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth/refresh")
+                .maxAge(refreshExpiration.getSeconds())
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new LoginResponse(loginResult.getAccessToken()));
     }
 
     @Operation(summary = "Change user password", description = "Authenticates the user and updates the password.")
@@ -96,9 +114,23 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Invalid refresh token", content = @Content)
     })
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
-        LoginResponse response = authenticationService.refreshToken(request.getRefreshToken());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<LoginResponse> refresh(@Parameter(
+            name = "refresh_token",
+            description = "Refresh token stored in HttpOnly cookie",
+            in = ParameterIn.COOKIE,
+            required = true
+    ) @CookieValue("refresh_token") String refreshToken) {
+        LoginResult result = authenticationService.refreshToken(refreshToken);
+        ResponseCookie cookie = ResponseCookie.from("refresh_token" , result.getRefreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth/refresh")
+                .maxAge(refreshExpiration)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new LoginResponse(result.getAccessToken()));
     }
 
     @Operation(summary = "Logout", description = "Invalidates the refresh token.")
@@ -107,8 +139,13 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Invalid refresh token", content = @Content)
     })
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@Valid @RequestBody LogoutRequest request) {
-        authenticationService.logout(request.getRefreshToken());
+    public ResponseEntity<String> logout(@Parameter(
+            name = "refresh_token",
+            description = "Refresh token stored in HttpOnly cookie",
+            in = ParameterIn.COOKIE,
+            required = true
+    ) @CookieValue("refresh_token") String refreshToken) {
+        authenticationService.logout(refreshToken);
         return ResponseEntity.ok("Logout successful");
     }
 

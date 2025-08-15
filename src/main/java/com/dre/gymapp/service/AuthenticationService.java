@@ -1,6 +1,6 @@
 package com.dre.gymapp.service;
 
-import com.dre.gymapp.dto.auth.LoginResponse;
+import com.dre.gymapp.dto.auth.LoginResult;
 import com.dre.gymapp.security.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class AuthenticationService {
     }
 
     // Authenticates user with username and password
-    public LoginResponse authenticate(String username, String password) {
+    public LoginResult authenticate(String username, String password) {
         logger.info("Authenticating user with username: {}", username);
         if (loginAttemptService.isBlocked(username)) {
             Duration remaining = loginAttemptService.getRemainingBlockDuration(username);
@@ -46,7 +46,7 @@ public class AuthenticationService {
             String jwt = jwtUtil.generateToken(username);
             String refreshToken = jwtUtil.generateRefreshToken(username);
             refreshTokenService.storeRefreshToken(username, refreshToken, refreshExpiration.toMillis());
-            return new LoginResponse(jwt, refreshToken);
+            return new LoginResult(jwt, refreshToken);
         } catch(AuthenticationException ex) {
             logger.warn("Authentication failed for user: {}", username);
             loginAttemptService.loginFailed(username);
@@ -55,7 +55,7 @@ public class AuthenticationService {
     }
 
     // Refreshes access token
-    public LoginResponse refreshToken(String refreshToken) {
+    public LoginResult refreshToken(String refreshToken) {
         logger.info("Refreshing token");
         if (jwtUtil.validateToken(refreshToken)) {
             String username = jwtUtil.extractUsername(refreshToken);
@@ -63,7 +63,7 @@ public class AuthenticationService {
                 String newJwt = jwtUtil.generateToken(username);
                 String newRefreshToken = jwtUtil.generateRefreshToken(username);
                 refreshTokenService.storeRefreshToken(username, newRefreshToken, refreshExpiration.toMillis());
-                return new LoginResponse(newJwt, newRefreshToken);
+                return new LoginResult(newJwt, newRefreshToken);
             }
         }
         logger.warn("Invalid refresh token for user: {}", jwtUtil.extractUsername(refreshToken));

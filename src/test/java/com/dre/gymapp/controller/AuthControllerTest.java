@@ -5,14 +5,19 @@ import com.dre.gymapp.service.AuthenticationService;
 import com.dre.gymapp.service.TraineeService;
 import com.dre.gymapp.service.TrainerService;
 import com.dre.gymapp.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+
+import java.lang.reflect.Field;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -29,6 +34,13 @@ public class AuthControllerTest {
     private TraineeService traineeService;
     @Mock
     private TrainerService trainerService;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        Field field = AuthController.class.getDeclaredField("refreshExpiration");
+        field.setAccessible(true);
+        field.set(authController, Duration.ofMinutes(15));
+    }
 
     @Test
     public void registerTrainee_ShouldCreateTrainee(){
@@ -63,10 +75,17 @@ public class AuthControllerTest {
     public void login_ShouldLogin() {
         String username = "john.doe";
         String password = "password";
+        String accessToken = "accessToken";
+        String refreshToken = "refreshToken";
 
-        ResponseEntity<LoginResponse> response = authController.login(username, password);
+        when(authenticationService.authenticate(username, password))
+                .thenReturn(new LoginResult(accessToken, refreshToken));
+
+        ResponseEntity<LoginResponse> response = authController.login(new LoginRequest(username, password));
 
         assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertEquals(accessToken, response.getBody().getAccessToken());
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
         verify(authenticationService).authenticate(username, password);
@@ -79,14 +98,14 @@ public class AuthControllerTest {
 
         when(authenticationService.authenticate(username, password)).thenThrow(BadCredentialsException.class);
 
-        assertThrows(BadCredentialsException.class, () -> authController.login(username, password));
+        assertThrows(BadCredentialsException.class, () -> authController.login(new LoginRequest(username, password)));
     }
 
     @Test
     public void changeLogin_ShouldChangeLogin(){
         String username = "john.doe";
         LoginChangeRequest request = new LoginChangeRequest(username, "oldPassword",  "newPassword");
-        LoginResponse mockAuth = mock(LoginResponse.class);
+        LoginResult mockAuth = mock(LoginResult.class);
 
         when(authenticationService.authenticate("john.doe", "oldPassword")).thenReturn(mockAuth);
 
@@ -108,28 +127,28 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void refresh_ShouldRefresh() {
+    public void refresh_ShouldReturnNoContent_AndSetCookie() {
         String refreshToken = "refreshToken";
-        TokenRefreshRequest request = new TokenRefreshRequest();
-        request.setRefreshToken(refreshToken);
-        LoginResponse expectedResponse = new LoginResponse("accessToken", refreshToken);
 
-        when(authenticationService.refreshToken(refreshToken)).thenReturn(expectedResponse);
+        LoginResult result = new LoginResult("accessToken", refreshToken);
+        when(authenticationService.refreshToken(refreshToken)).thenReturn(result);
 
-        ResponseEntity<LoginResponse> response = authController.refresh(request);
+        ResponseEntity<LoginResponse> response = authController.refresh(refreshToken);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedResponse, response.getBody());
+
+        String setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        assertNotNull(setCookie);
+        assertTrue(setCookie.contains("refresh_token=" + refreshToken));
+        assertTrue(setCookie.contains("HttpOnly"));
     }
 
     @Test
     public void logout_ShouldLogout() {
         String refreshToken = "refreshToken";
-        LogoutRequest request = new LogoutRequest();
-        request.setRefreshToken(refreshToken);
 
-        ResponseEntity<String> response = authController.logout(request);
+        ResponseEntity<String> response = authController.logout(refreshToken);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());

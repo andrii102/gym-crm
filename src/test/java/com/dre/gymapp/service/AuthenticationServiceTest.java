@@ -1,6 +1,6 @@
 package com.dre.gymapp.service;
 
-import com.dre.gymapp.dto.auth.LoginResponse;
+import com.dre.gymapp.dto.auth.LoginResult;
 import com.dre.gymapp.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,9 +59,9 @@ public class AuthenticationServiceTest {
         when(jwtUtil.generateRefreshToken(username)).thenReturn(refreshToken);
         doNothing().when(refreshTokenService).storeRefreshToken(username, refreshToken, refreshExpiration.toMillis());
 
-        LoginResponse response = authenticationService.authenticate(username, password);
+        LoginResult response = authenticationService.authenticate(username, password);
 
-        assertEquals(jwt, response.getJwt());
+        assertEquals(jwt, response.getAccessToken());
         assertEquals(refreshToken, response.getRefreshToken());
 
         verify(authenticationManager).authenticate(new UsernamePasswordAuthenticationToken(username, password));
@@ -109,9 +109,9 @@ public class AuthenticationServiceTest {
         when(jwtUtil.generateRefreshToken(username)).thenReturn(newRefreshToken);
         doNothing().when(refreshTokenService).storeRefreshToken(username, newRefreshToken, refreshExpiration.toMillis());
         
-        LoginResponse response = authenticationService.refreshToken(refreshToken);
+        LoginResult response = authenticationService.refreshToken(refreshToken);
         
-        assertEquals(newJwt, response.getJwt());
+        assertEquals(newJwt, response.getAccessToken());
         assertEquals(newRefreshToken, response.getRefreshToken());
         
         verify(jwtUtil).validateToken(refreshToken);
