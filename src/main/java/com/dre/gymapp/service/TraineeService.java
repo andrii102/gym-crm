@@ -142,6 +142,9 @@ public class TraineeService {
     public void deleteTraineeByUsername(String username){
         logger.info("Deleting trainee with username: {}", username);
         Trainee trainee = traineeDao.findByUsername(username).orElseThrow(() -> new NotFoundException("Trainee not found"));
+        List<Training> trainings = trainee.getTrainings();
+        // Remove trainings from trainer-workload-service
+        trainingService.removeTrainingsFromWorkload(trainings);
         traineeDao.delete(trainee);
     }
 

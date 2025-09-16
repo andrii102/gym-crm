@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: gym-crm
   jpa:
     properties:
       hibernate:
@@ -27,6 +29,17 @@ jwt:
   expiration: 15m
   refresh-expiration: 24h
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      workloadService:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 70
+        wait-duration-in-open-state: 10m
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
 
 ---
 
@@ -60,6 +73,11 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
 
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
 ---
 
 spring:
@@ -82,6 +100,11 @@ spring:
     redis:
       host: localhost
       port: 6379
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
 
 ---
 
