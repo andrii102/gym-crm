@@ -18,6 +18,16 @@ services:
     ports:
       - "6379:6379"
 
+  artemis:
+    image: vromero/activemq-artemis
+    container_name: artemis
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    environment:
+      ARTEMIS_USERNAME: ${ARTEMIS_USERNAME}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
+
   gym-app:
     build:
       context: .
@@ -31,10 +41,12 @@ services:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       JWT_SECRET: ${JWT_SECRET}
+      ARTEMIS_USERNAME: ${ARTEMIS_USERNAME}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
     depends_on:
       - postgres
       - redis
-
+      - artemis
 
 volumes:
   gymcrm_postgres_data:

@@ -23,23 +23,14 @@ management:
     metrics:
       export:
         enabled: true
+  health:
+    jms:
+      enabled: true
 
 jwt:
   secret: ${JWT_SECRET}
   expiration: 15m
   refresh-expiration: 24h
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      workloadService:
-        register-health-indicator: true
-        sliding-window-size: 10
-        minimum-number-of-calls: 5
-        failure-rate-threshold: 70
-        wait-duration-in-open-state: 10m
-        permitted-number-of-calls-in-half-open-state: 3
-        automatic-transition-from-open-to-half-open-enabled: true
 
 ---
 
@@ -65,6 +56,17 @@ spring:
     redis:
       host: localhost
       port: 6379
+  artemis:
+    mode: native
+    broker-url: tcp://localhost:61616
+    user: ${ARTEMIS_USERNAME}
+    password: ${ARTEMIS_PASSWORD}
+  jms:
+    listener:
+      min-concurrency: 3
+      max-concurrency: 10
+      session:
+        acknowledge-mode: auto
 
 springdoc:
   api-docs:
@@ -72,11 +74,6 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: method
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
 
 ---
 
@@ -101,10 +98,17 @@ spring:
       host: localhost
       port: 6379
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
+  artemis:
+    mode: native
+    broker-url: tcp://localhost:61616
+    user: ${ARTEMIS_USER_PROD}
+    password: ${ARTEMIS_PASSWORD_PROD}
+  jms:
+    listener:
+      min-concurrency: 5
+      max-concurrency: 20
+      session:
+        acknowledge-mode: auto
 
 ---
 
@@ -130,3 +134,14 @@ spring:
     redis:
       host: redis
       port: 6379
+  artemis:
+    mode: native
+    broker-url: tcp://localhost:61616
+    user: ${ARTEMIS_USERNAME}
+    password: ${ARTEMIS_PASSWORD}
+  jms:
+    listener:
+      min-concurrency: 3
+      max-concurrency: 10
+      session:
+        acknowledge-mode: auto

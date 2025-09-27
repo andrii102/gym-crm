@@ -1,6 +1,5 @@
 package com.dre.gymapp.service;
 
-import com.dre.gymapp.client.WorkloadClient;
 import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingDao;
@@ -13,9 +12,9 @@ import com.dre.gymapp.model.Trainee;
 import com.dre.gymapp.model.Trainer;
 import com.dre.gymapp.model.Training;
 import com.dre.gymapp.model.TrainingType;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -30,19 +29,19 @@ public class TrainingService {
     private final TrainerDao trainerDao;
     private final TrainingDao trainingDao;
     private final TrainingTypeDao trainingTypeDao;
+    private final TrainingProducer trainingProducer;
+    private final JmsTemplate jmsTemplate;
 
-    private final WorkloadClient workloadClient;
-
-    public TrainingService(TraineeDao traineeDao, TrainerDao trainerDao, TrainingDao trainingDao, TrainingTypeDao trainingTypeDao, WorkloadClient workloadClient) {
+    public TrainingService(TraineeDao traineeDao, TrainerDao trainerDao, TrainingDao trainingDao, TrainingTypeDao trainingTypeDao, TrainingProducer trainingProducer, JmsTemplate jmsTemplate) {
         this.traineeDao = traineeDao;
         this.trainerDao = trainerDao;
         this.trainingDao = trainingDao;
         this.trainingTypeDao = trainingTypeDao;
-        this.workloadClient = workloadClient;
+        this.trainingProducer = trainingProducer;
+        this.jmsTemplate = jmsTemplate;
     }
 
     // Creates and saves a new training
-    @CircuitBreaker(name = "workloadService", fallbackMethod = "trainingWorkloadFallback")
     public Training createTraining(NewTrainingRequest request) {
         logger.info("Creating new training");
         Trainee trainee = traineeDao.findByUsername(request.getTraineeUsername()).orElseThrow(() -> new NotFoundException("Trainee not found"));
@@ -62,15 +61,8 @@ public class TrainingService {
                 "ADD"
         );
 
-        workloadClient.manageTraining(workloadRequest);
+        trainingProducer.send("trainings.queue", workloadRequest);
         return training;
-    }
-
-    private Training trainingWorkloadFallback(NewTrainingRequest request, Throwable throwable) {
-        logger.warn("Failed to add training to workload: {}", throwable.getMessage());
-        throw new RuntimeException("Failed to add training to workload");
-        // TODO:
-        // implement retry with persistence logic
     }
 
     // Gets a training by its ID, throws exception if not found
@@ -119,7 +111,7 @@ public class TrainingService {
                     training.getTrainingDuration(),
                     "DELETE"
             );
-            workloadClient.manageTraining(workloadRequest);
+            jmsTemplate.convertAndSend("trainings.queue", workloadRequest);
         }
     }
 }
