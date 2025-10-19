@@ -1,0 +1,32 @@
+spring:
+  # Disable database setup completely
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+      - org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration
+
+  # Disable ActiveMQ
+  jms:
+    listener:
+      auto-startup: false
+
+  # Disable Redis
+  data:
+    redis:
+      repositories:
+        enabled: false
+management:
+  health:
+    db:
+      enabled: false
+    redis:
+      enabled: false
+    jms:
+      enabled: false
+
+jwt:
+  secret: "0123456789ABCDEF0123456789ABCDEF"
+  expiration: 15m
+  refresh-expiration: 24h
