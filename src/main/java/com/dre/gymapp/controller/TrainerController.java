@@ -55,7 +55,6 @@ public class TrainerController {
             @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
-    @PatchMapping("/{username}")
     @PutMapping("/{username}")
     public ResponseEntity<TrainerProfileResponse> updateTrainerProfile(
             @Parameter(description = "Username of the trainer") @PathVariable("username") String username,
