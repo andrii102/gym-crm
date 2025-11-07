@@ -5,12 +5,10 @@ import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingDao;
 import com.dre.gymapp.dao.TrainingTypeDao;
 import com.dre.gymapp.dto.trainings.NewTrainingRequest;
+import com.dre.gymapp.dto.trainings.TrainingEventRequest;
 import com.dre.gymapp.dto.trainings.TrainingTypeResponse;
 import com.dre.gymapp.exception.NotFoundException;
-import com.dre.gymapp.model.Trainee;
-import com.dre.gymapp.model.Trainer;
-import com.dre.gymapp.model.Training;
-import com.dre.gymapp.model.TrainingType;
+import com.dre.gymapp.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +21,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +37,8 @@ public class TrainingServiceTest {
     private TrainerDao trainerDao;
     @Mock
     private TrainingTypeDao trainingTypeDao;
+    @Mock
+    private TrainingProducer trainingProducer;
 
     private Training testTraining;
 
@@ -49,15 +50,28 @@ public class TrainingServiceTest {
 
     @Test
     public void createTraining_ShouldCreateTrainingRecord(){
-        when(traineeDao.findByUsername(any())).thenReturn(Optional.of(new Trainee()));
-        when(trainerDao.findByUsername(any())).thenReturn(Optional.of(new Trainer()));
+        User traineeUser = new User("Trainee", "User");
+        User trainerUser = new User("Trainer", "User");
+        traineeUser.setUsername("trainee.user");
+        trainerUser.setUsername("trainer.user");
 
-        Training result = trainingService.createTraining(new NewTrainingRequest("trainee.user", "trainer.user",
-                testTraining.getTrainingName(), null, null));
+        Trainee trainee = new Trainee();
+        trainee.setUser(traineeUser);
+        Trainer trainer = new Trainer(new TrainingType("RUNNING"), trainerUser);
+        trainer.setUser(trainerUser);
+
+        NewTrainingRequest request = new NewTrainingRequest("trainee.user", "trainer.user",
+                testTraining.getTrainingName(), null, null);
+
+        when(traineeDao.findByUsername(any())).thenReturn(Optional.of(trainee));
+        when(trainerDao.findByUsername(any())).thenReturn(Optional.of(trainer));
+
+        Training result = trainingService.createTraining(request);
 
         assertNotNull(result);
         assertEquals(testTraining.getTrainingName(), result.getTrainingName());
         verify(trainingDao).save(any());
+        verify(trainingProducer).send(eq("trainings.queue"), any(TrainingEventRequest.class));
     }
 
     @Test

@@ -28,7 +28,7 @@ management:
       enabled: true
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:aed623a44f30022546545bf4ddbb1471f680fffbeac134361a7312fceec33ff6}
   expiration: 15m
   refresh-expiration: 24h
 
@@ -136,7 +136,7 @@ spring:
       port: 6379
   artemis:
     mode: native
-    broker-url: tcp://localhost:61616
+    broker-url: tcp://artemis:61616
     user: ${ARTEMIS_USERNAME}
     password: ${ARTEMIS_PASSWORD}
   jms:

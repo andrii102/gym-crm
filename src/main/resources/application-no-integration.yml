@@ -1,0 +1,12 @@
+spring:
+  autoconfigure:
+    exclude: [
+      org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration,
+      org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,
+      org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+    ]
+
+jwt:
+  secret: "aed623a44f30022546545bf4ddbb1471f680fffbeac134361a7312fceec33ff6"
+  expiration: 15m
+  refresh-expiration: 24h

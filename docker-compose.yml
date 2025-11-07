@@ -11,12 +11,16 @@ services:
       - "5433:5432"
     volumes:
       - gymcrm_postgres_data:/var/lib/postgresql/data
+    networks:
+      - gymcrm-network
 
   redis:
     image: redis:8
     container_name: gymcrm-redis
     ports:
       - "6379:6379"
+    networks:
+      - gymcrm-network
 
   artemis:
     image: vromero/activemq-artemis
@@ -27,6 +31,8 @@ services:
     environment:
       ARTEMIS_USERNAME: ${ARTEMIS_USERNAME}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
+    networks:
+      - gymcrm-network
 
   gym-app:
     build:
@@ -43,6 +49,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ARTEMIS_USERNAME: ${ARTEMIS_USERNAME}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
+    networks:
+      - gymcrm-network
     depends_on:
       - postgres
       - redis
@@ -50,3 +58,7 @@ services:
 
 volumes:
   gymcrm_postgres_data:
+
+networks:
+  gymcrm-network:
+    external: true
