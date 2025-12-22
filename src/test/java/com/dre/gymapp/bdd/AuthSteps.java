@@ -1,6 +1,8 @@
 package com.dre.gymapp.bdd;
 
+import com.dre.gymapp.model.Role;
 import com.dre.gymapp.security.CustomUserDetailsService;
+import com.dre.gymapp.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -40,6 +42,8 @@ public class AuthSteps {
     protected PasswordEncoder passwordEncoder;
     @Autowired
     protected StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    protected UserService userService;
 
     private ValueOperations<String, String> valueOperationsMock;
 
@@ -47,9 +51,13 @@ public class AuthSteps {
 
     @Given("a registered user {string} exists with password {string}")
     public void registered_user_exists(String username, String rawPassword) {
+        com.dre.gymapp.model.User user = new com.dre.gymapp.model.User(username, rawPassword);
+        user.setRole(Role.ADMIN);
         String hashedPassword = "hashed-" + rawPassword;
         List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
         UserDetails userDetails = new User(username, hashedPassword, authorities);
+
+        when(userService.getUserByUsername(any())).thenReturn(user);
 
         this.valueOperationsMock = mock(ValueOperations.class);
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperationsMock);
@@ -58,6 +66,7 @@ public class AuthSteps {
         when(stringRedisTemplate.hasKey(anyString())).thenReturn(false);
 
         when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+
         when(passwordEncoder.matches(eq(rawPassword), eq(hashedPassword))).thenReturn(true);
         when(passwordEncoder.matches(argThat(pass -> !pass.equals(rawPassword)), eq(hashedPassword))).thenReturn(false);
     }

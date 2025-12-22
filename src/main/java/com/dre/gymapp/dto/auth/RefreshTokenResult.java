@@ -1,13 +1,11 @@
 package com.dre.gymapp.dto.auth;
 
-import com.dre.gymapp.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class LoginResult {
+public class RefreshTokenResult {
     String accessToken;
     String refreshToken;
-    Role role;
 }

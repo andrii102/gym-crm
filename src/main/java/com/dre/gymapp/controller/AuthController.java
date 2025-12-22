@@ -90,7 +90,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new LoginResponse(loginResult.getAccessToken()));
+                .body(new LoginResponse(loginResult.getAccessToken(), loginResult.getRole()));
     }
 
     @Operation(summary = "Change user password", description = "Authenticates the user and updates the password.")
@@ -110,17 +110,17 @@ public class AuthController {
     @Operation(summary = "Refresh access token", description = "Refreshes the access token using the refresh token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Token refreshed successfully",
-            content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            content = @Content(schema = @Schema(implementation = RefreshTokenResponse.class))),
             @ApiResponse(responseCode = "401", description = "Invalid refresh token", content = @Content)
     })
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refresh(@Parameter(
+    public ResponseEntity<RefreshTokenResponse> refresh(@Parameter(
             name = "refresh_token",
             description = "Refresh token stored in HttpOnly cookie",
             in = ParameterIn.COOKIE,
             required = true
     ) @CookieValue("refresh_token") String refreshToken) {
-        LoginResult result = authenticationService.refreshToken(refreshToken);
+        RefreshTokenResult result = authenticationService.refreshToken(refreshToken);
         ResponseCookie cookie = ResponseCookie.from("refresh_token" , result.getRefreshToken())
                 .httpOnly(true)
                 .secure(false)
@@ -130,7 +130,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new LoginResponse(result.getAccessToken()));
+                .body(new RefreshTokenResponse(result.getAccessToken()));
     }
 
     @Operation(summary = "Logout", description = "Invalidates the refresh token.")

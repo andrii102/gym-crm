@@ -53,7 +53,7 @@ public class TraineeServiceTest {
 
     @Test
     public void createTrainee_ShouldCreateNewTraineeRecord() {
-        when(userService.createUser(any(), any())).thenReturn(new GeneratedUser(testUser, testUser.getPassword()));
+        when(userService.createUser(any(), any(), any(Role.class))).thenReturn(new GeneratedUser(testUser, testUser.getPassword()));
 
         RegistrationResponse result = traineeService.createTrainee(new TraineeRegistrationRequest("John", "Doe"));
 

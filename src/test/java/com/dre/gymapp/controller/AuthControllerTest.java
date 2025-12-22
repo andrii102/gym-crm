@@ -1,6 +1,7 @@
 package com.dre.gymapp.controller;
 
 import com.dre.gymapp.dto.auth.*;
+import com.dre.gymapp.model.Role;
 import com.dre.gymapp.service.AuthenticationService;
 import com.dre.gymapp.service.TraineeService;
 import com.dre.gymapp.service.TrainerService;
@@ -79,7 +80,7 @@ public class AuthControllerTest {
         String refreshToken = "refreshToken";
 
         when(authenticationService.authenticate(username, password))
-                .thenReturn(new LoginResult(accessToken, refreshToken));
+                .thenReturn(new LoginResult(accessToken, refreshToken, Role.ADMIN));
 
         ResponseEntity<LoginResponse> response = authController.login(new LoginRequest(username, password));
 
@@ -130,10 +131,10 @@ public class AuthControllerTest {
     public void refresh_ShouldReturnNoContent_AndSetCookie() {
         String refreshToken = "refreshToken";
 
-        LoginResult result = new LoginResult("accessToken", refreshToken);
+        RefreshTokenResult result = new RefreshTokenResult("accessToken", refreshToken);
         when(authenticationService.refreshToken(refreshToken)).thenReturn(result);
 
-        ResponseEntity<LoginResponse> response = authController.refresh(refreshToken);
+        ResponseEntity<RefreshTokenResponse> response = authController.refresh(refreshToken);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());

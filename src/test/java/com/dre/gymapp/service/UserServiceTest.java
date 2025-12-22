@@ -3,6 +3,7 @@ package com.dre.gymapp.service;
 import com.dre.gymapp.dao.UserDao;
 import com.dre.gymapp.dto.user.GeneratedUser;
 import com.dre.gymapp.exception.NotFoundException;
+import com.dre.gymapp.model.Role;
 import com.dre.gymapp.model.User;
 import com.dre.gymapp.util.CredentialsGenerator;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +52,7 @@ public class UserServiceTest {
                 .thenReturn("<PASSWORD>");
         when(passwordEncoder.encode(testUser.getPassword())).thenReturn(testUser.getPassword());
 
-        GeneratedUser generatedUser = userService.createUser(testUser.getFirstName(), testUser.getLastName());
+        GeneratedUser generatedUser = userService.createUser(testUser.getFirstName(), testUser.getLastName(), Role.ADMIN);
 
         assertNotNull(generatedUser);
         assertEquals(testUser.getFirstName(), generatedUser.getUser().getFirstName());

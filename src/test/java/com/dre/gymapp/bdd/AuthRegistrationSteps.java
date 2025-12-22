@@ -4,6 +4,7 @@ import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
 import com.dre.gymapp.dto.auth.TrainerRegistrationRequest;
 import com.dre.gymapp.dto.user.GeneratedUser;
+import com.dre.gymapp.model.Role;
 import com.dre.gymapp.model.User;
 import com.dre.gymapp.service.TraineeService;
 import com.dre.gymapp.service.TrainerService;
@@ -55,7 +56,7 @@ public class AuthRegistrationSteps {
 
         User fakeUser = new User("Test", "User");
         GeneratedUser fakeGeneratedUser = new GeneratedUser(fakeUser, "pass123");
-        when(userService.createUser(anyString(), anyString())).thenReturn(fakeGeneratedUser);
+        when(userService.createUser(anyString(), anyString(), any(Role.class))).thenReturn(fakeGeneratedUser);
     }
 
     @Given("the trainer service is ready to register a new user")
@@ -66,7 +67,7 @@ public class AuthRegistrationSteps {
 
         User fakeUser = new User("Test", "User");
         GeneratedUser fakeGeneratedUser = new GeneratedUser(fakeUser, "pass123");
-        when(userService.createUser(anyString(), anyString())).thenReturn(fakeGeneratedUser);
+        when(userService.createUser(anyString(), anyString(), any(Role.class))).thenReturn(fakeGeneratedUser);
     }
 
 

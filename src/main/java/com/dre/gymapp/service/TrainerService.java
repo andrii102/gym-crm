@@ -15,10 +15,7 @@ import com.dre.gymapp.dto.trainings.TrainerTrainingsResponse;
 import com.dre.gymapp.dto.user.GeneratedUser;
 import com.dre.gymapp.exception.BadRequestException;
 import com.dre.gymapp.exception.NotFoundException;
-import com.dre.gymapp.model.Trainee;
-import com.dre.gymapp.model.Trainer;
-import com.dre.gymapp.model.Training;
-import com.dre.gymapp.model.User;
+import com.dre.gymapp.model.*;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +49,7 @@ public class TrainerService {
     public RegistrationResponse createTrainer(TrainerRegistrationRequest request) {
         logger.info("Creating new trainer");
 
-        GeneratedUser generatedUser = userService.createUser(request.getFirstName(), request.getLastName());
+        GeneratedUser generatedUser = userService.createUser(request.getFirstName(), request.getLastName(), Role.TRAINER);
 
         Trainer trainer = new Trainer(trainingTypeDao.findById(request.getSpecializationId()), generatedUser.getUser());
         trainerDao.save(trainer);

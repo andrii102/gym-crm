@@ -59,7 +59,7 @@ public class TrainerServiceTest {
 
     @Test
     public void createTrainer_ShouldCreateNewTrainerRecord(){
-        when(userService.createUser("John", "Doe")).thenReturn(new GeneratedUser(testUser, testUser.getPassword()));
+        when(userService.createUser("John", "Doe", Role.TRAINER)).thenReturn(new GeneratedUser(testUser, testUser.getPassword()));
         when(trainingTypeDao.findById(any())).thenReturn(new TrainingType());
 
         RegistrationResponse result = trainerService.createTrainer(new TrainerRegistrationRequest("John", "Doe", null));

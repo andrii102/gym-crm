@@ -1,6 +1,8 @@
 package com.dre.gymapp.service;
 
 import com.dre.gymapp.dto.auth.LoginResult;
+import com.dre.gymapp.dto.auth.RefreshTokenResult;
+import com.dre.gymapp.model.User;
 import com.dre.gymapp.security.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,15 +23,17 @@ public class AuthenticationService {
     private final JwtUtil jwtUtil;
     private final LoginAttemptService loginAttemptService;
     private final RefreshTokenService refreshTokenService;
+    private final UserService userService;
 
     @Value("${jwt.refresh-expiration}")
     private Duration refreshExpiration;
 
-    public AuthenticationService(AuthenticationManager authenticationManager, JwtUtil jwtUtil, LoginAttemptService loginAttemptService, RefreshTokenService refreshTokenService) {
+    public AuthenticationService(AuthenticationManager authenticationManager, JwtUtil jwtUtil, LoginAttemptService loginAttemptService, RefreshTokenService refreshTokenService, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.loginAttemptService = loginAttemptService;
         this.refreshTokenService = refreshTokenService;
+        this.userService = userService;
     }
 
     // Authenticates user with username and password
@@ -43,10 +47,11 @@ public class AuthenticationService {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
             loginAttemptService.loginSucceeded(username);
+            User user = userService.getUserByUsername(username);
             String jwt = jwtUtil.generateToken(username);
             String refreshToken = jwtUtil.generateRefreshToken(username);
             refreshTokenService.storeRefreshToken(username, refreshToken, refreshExpiration.toMillis());
-            return new LoginResult(jwt, refreshToken);
+            return new LoginResult(jwt, refreshToken, user.getRole());
         } catch(AuthenticationException ex) {
             logger.warn("Authentication failed for user: {}", username);
             loginAttemptService.loginFailed(username);
@@ -55,7 +60,7 @@ public class AuthenticationService {
     }
 
     // Refreshes access token
-    public LoginResult refreshToken(String refreshToken) {
+    public RefreshTokenResult refreshToken(String refreshToken) {
         logger.info("Refreshing token");
         if (jwtUtil.validateToken(refreshToken)) {
             String username = jwtUtil.extractUsername(refreshToken);
@@ -63,7 +68,7 @@ public class AuthenticationService {
                 String newJwt = jwtUtil.generateToken(username);
                 String newRefreshToken = jwtUtil.generateRefreshToken(username);
                 refreshTokenService.storeRefreshToken(username, newRefreshToken, refreshExpiration.toMillis());
-                return new LoginResult(newJwt, newRefreshToken);
+                return new RefreshTokenResult(newJwt, newRefreshToken);
             }
         }
         logger.warn("Invalid refresh token for user: {}", jwtUtil.extractUsername(refreshToken));

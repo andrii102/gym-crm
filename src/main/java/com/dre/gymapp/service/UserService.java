@@ -3,6 +3,7 @@ package com.dre.gymapp.service;
 import com.dre.gymapp.dao.UserDao;
 import com.dre.gymapp.dto.user.GeneratedUser;
 import com.dre.gymapp.exception.NotFoundException;
+import com.dre.gymapp.model.Role;
 import com.dre.gymapp.model.User;
 import com.dre.gymapp.util.CredentialsGenerator;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ public class UserService {
     }
 
     // Creates a new user with the given first and last name
-    public GeneratedUser createUser(String firstName, String lastName) {
+    public GeneratedUser createUser(String firstName, String lastName , Role role) {
         logger.info("Creating new user");
         User user = new User(firstName, lastName);
 
@@ -49,6 +50,7 @@ public class UserService {
 
         user.setUsername(username);
         user.setPassword(hashedPassword);
+        user.setRole(role);
 
         userDao.save(user);
         logger.info("User created successfully");
