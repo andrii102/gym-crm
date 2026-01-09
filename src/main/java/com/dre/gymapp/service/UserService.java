@@ -57,6 +57,23 @@ public class UserService {
         return new GeneratedUser(user, password);
     }
 
+    public GeneratedUser createUser(String firstName, String lastName, Role role, String password) {
+        logger.info("Creating new user with provided password");
+        User user = new User(firstName, lastName);
+
+        String username = credentialsGenerator.generateUsername(firstName, lastName,
+                userDao.findByUsernameStartingWith(firstName.toLowerCase() + "." + lastName.toLowerCase()));
+        String hashedPassword = passwordEncoder.encode(password);
+
+        user.setUsername(username);
+        user.setPassword(hashedPassword);
+        user.setRole(role);
+
+        userDao.save(user);
+        logger.info("User created successfully");
+        return new GeneratedUser(user, password);
+    }
+
     // Updates an existing user
     public User updateUser(User user) {
         logger.info("Updating user with ID: {}", user.getId());

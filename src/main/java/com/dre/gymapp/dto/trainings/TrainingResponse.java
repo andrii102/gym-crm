@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Response object containing trainee's training session details")
-public class TraineeTrainingsResponse {
+public class TrainingResponse {
     @Schema(description = "Unique identifier of the training session")
     private Long trainingId;
 
@@ -29,6 +29,9 @@ public class TraineeTrainingsResponse {
 
     @Schema(description = "Duration of training session in minutes")
     private Integer trainingDuration;
+
+    @Schema(description = "Username of the trainee attending the session")
+    private String traineeUsername;
 
     @Schema(description = "Username of the trainer conducting the session")
     private String trainerUsername;

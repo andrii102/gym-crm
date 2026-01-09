@@ -30,12 +30,14 @@ INSERT INTO trainee (id, date_of_birth, address, user_id)
 VALUES (2, DATE '1998-11-22', '456 Oak Ave', 6);
 
 -- Insert into training
-INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date, training_duration)
-VALUES (1, 1, 1, 'Morning Yoga', 1, DATE '2025-06-01', 60);
-INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date, training_duration)
-VALUES (2, 2, 2, 'Evening Cardio', 2, DATE '2025-06-02', 45);
-INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date, training_duration)
-VALUES (3, 2, 3, 'Strength Training', 3, DATE '2025-06-03', 90);
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (1, 1, 1, 'Morning Yoga', 1, TIMESTAMP '2025-06-01 08:00:00', 60, 'SCHEDULED');
+
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (2, 2, 2, 'Evening Cardio', 2, TIMESTAMP '2025-06-02 18:00:00', 45, 'IN_REVIEW');
+
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (3, 2, 3, 'Strength Training', 3, TIMESTAMP '2025-06-03 10:30:00', 90, 'COMPLETED');
 
 -- Insert into join table trainee_trainer
 INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES (1, 1);

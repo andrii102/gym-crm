@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -45,17 +46,30 @@ public class AuthController {
         this.authenticationService = authenticationService;
     }
 
-    @Operation(summary = "Register a new trainee", description = "Creates a new user and trainee profile.")
+    @Operation(summary = "Register(for admins) a new trainee", description = "Creates a new user and trainee profile.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Trainee registered successfully",
                     content = @Content(schema = @Schema(implementation = RegistrationResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content)
     })
-    @PostMapping("/trainee")
-    public ResponseEntity<RegistrationResponse> registerTrainee(@RequestBody @Valid TraineeRegistrationRequest request ) {
+    @PostMapping("/trainee/admin-create")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RegistrationResponse> registerTraineeAdmin(@RequestBody @Valid TraineeRegistrationRequest request ) {
         RegistrationResponse response = traineeService.createTrainee(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response) ;
+    }
+
+    @Operation(summary = "Register a new trainee", description = "Creates a new user and trainee profile.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Trainee registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content)
+    })
+    @PostMapping("/trainee")
+    public ResponseEntity<String> registerTraineeWithPassword(@RequestBody @Valid TraineeRegistrationWithPasswordRequest request ) {
+        traineeService.createTrainee(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Trainee registered successfully") ;
     }
 
     @Operation(summary = "Register a new trainer", description = "Creates a new user and trainer profile.")

@@ -4,6 +4,7 @@ import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dto.auth.RegistrationResponse;
 import com.dre.gymapp.dto.auth.TraineeRegistrationRequest;
+import com.dre.gymapp.dto.auth.TraineeRegistrationWithPasswordRequest;
 import com.dre.gymapp.dto.trainee.TraineeProfileResponse;
 import com.dre.gymapp.dto.trainee.TraineeProfileUpdateRequest;
 import com.dre.gymapp.dto.trainee.UpdateTrainersListRequest;
@@ -44,7 +45,10 @@ public class TraineeService {
     public RegistrationResponse createTrainee(TraineeRegistrationRequest request) {
         logger.info("Creating new trainee");
 
-        GeneratedUser generatedUser = userService.createUser(request.getFirstName(), request.getLastName(), Role.TRAINEE);
+        GeneratedUser generatedUser = userService.createUser(
+                request.getFirstName(),
+                request.getLastName(),
+                Role.TRAINEE);
 
         Trainee trainee = new Trainee(request.getDateOfBirth(), request.getAddress());
         trainee.setUser(generatedUser.getUser());
@@ -53,6 +57,25 @@ public class TraineeService {
         logger.info("Trainee created successfully");
 
         return new RegistrationResponse(generatedUser.getUser().getUsername(), generatedUser.getRawPassword());
+    }
+
+    public Trainee createTrainee(TraineeRegistrationWithPasswordRequest request) {
+        logger.info("Creating new trainee with password");
+
+        GeneratedUser generatedUser = userService.createUser(
+                request.getFirstName(),
+                request.getLastName(),
+                Role.TRAINEE,
+                request.getPassword()
+        );
+
+        Trainee trainee = new Trainee();
+        trainee.setUser(generatedUser.getUser());
+        traineeDao.save(trainee);
+
+        logger.info("Trainee created successfully with password");
+
+        return trainee;
     }
 
     // Updates an existing trainee record
@@ -181,15 +204,16 @@ public class TraineeService {
     public List<TraineeTrainingsResponse> getTraineeTrainings(String username, TraineeTrainingsRequest request) {
         logger.info("Getting trainee trainings for trainee with username: {}", username);
         List<Training> trainings = trainingService.getTrainingsByParams(request.getTrainerUsername(), username,
-                request.getPeriodFrom(), request.getPeriodTo(), request.getTrainingType());
-        System.out.println("REQUEST:" + request);
+                request.getPeriodFrom(), request.getPeriodTo(), request.getTrainingType(), request.getTrainingStatus(), request.getLimit());
         List<TraineeTrainingsResponse> dto = trainings.stream()
                 .map(training -> new TraineeTrainingsResponse(
+                        training.getId(),
                         training.getTrainingName(),
-                        training.getTrainingDate(),
+                        training.getTrainingDateTime(),
                         training.getTrainingType().getTrainingTypeName(),
                         training.getTrainingDuration(),
-                        training.getTrainer().getUser().getUsername()
+                        training.getTrainer().getUser().getUsername(),
+                        training.getStatus()
                 )).toList();
 
         logger.info("Trainee trainings retrieved successfully");

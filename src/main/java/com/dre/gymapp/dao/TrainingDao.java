@@ -1,14 +1,16 @@
 package com.dre.gymapp.dao;
 
 import com.dre.gymapp.model.Training;
+import com.dre.gymapp.model.TrainingStatus;
 import com.dre.gymapp.model.TrainingType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +44,7 @@ public class TrainingDao {
 
     // Finds trainings by parameters
     public List<Training> findTrainingsByParams(String trainerUsername, String traineeUsername,
-                                                LocalDate fromDate, LocalDate toDate, String trainingTypeName) {
+                                                LocalDateTime fromDateTime, LocalDateTime toDateTime, String trainingTypeName, TrainingStatus trainingStatus, Integer limit) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Training> query = cb.createQuery(Training.class);
         Root<Training> root = query.from(Training.class);
@@ -55,11 +57,14 @@ public class TrainingDao {
         if (traineeUsername != null && !traineeUsername.isEmpty()) {
             predicates.add(cb.equal(root.get("trainee").get("user").get("username"), traineeUsername));
         }
-        if (fromDate != null) {
-            predicates.add(cb.greaterThanOrEqualTo(root.get("trainingDate"), fromDate));
+        if (fromDateTime != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("trainingDateTime"), fromDateTime));
         }
-        if (toDate != null) {
-            predicates.add(cb.lessThanOrEqualTo(root.get("trainingDate"), toDate));
+        if (toDateTime != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("trainingDateTime"), toDateTime));
+        }
+        if (trainingStatus != null) {
+            predicates.add(cb.equal(root.get("status"), trainingStatus));
         }
         if (trainingTypeName != null && !trainingTypeName.isEmpty()) {
             Join<Training, TrainingType> trainingTypeJoin = root.join("trainingType");
@@ -68,6 +73,20 @@ public class TrainingDao {
 
         query.where(cb.and(predicates.toArray(new Predicate[0])));
 
-        return entityManager.createQuery(query).getResultList();
+        TypedQuery<Training> typedQuery = entityManager.createQuery(query);
+
+        if (limit != null && limit > 0) {
+            typedQuery.setMaxResults(limit);
+        }
+
+        return typedQuery.getResultList();
+    }
+
+    @Transactional
+    public void update(Training training) {
+        if (training == null || training.getId() == null) {
+            throw new IllegalArgumentException("Training ID cannot be null for update");
+        }
+        entityManager.merge(training);
     }
 }

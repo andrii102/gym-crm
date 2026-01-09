@@ -13,9 +13,9 @@ INSERT INTO users (id, first_name, last_name, username, password, role, is_activ
 VALUES (6, 'Jacob', 'Green', 'jacob.green', '$2a$12$TLay2hlDPV/F2n4bStJml.bGZrN8Qws1V3jXNpc.G/UkXeYkoe6Iy','TRAINEE', TRUE) ON CONFLICT (id) DO NOTHING;  --pass987
 
 -- Insert into training_type
-INSERT INTO training_type (id, training_type_name) VALUES (1, 'Yoga') ON CONFLICT (id) DO NOTHING;
-INSERT INTO training_type (id, training_type_name) VALUES (2, 'Cardio') ON CONFLICT (id) DO NOTHING;
-INSERT INTO training_type (id, training_type_name) VALUES (3, 'Strength') ON CONFLICT (id) DO NOTHING;
+INSERT INTO training_type (id, training_type_name) VALUES (1, 'YogaMaster') ON CONFLICT (id) DO NOTHING;
+INSERT INTO training_type (id, training_type_name) VALUES (2, 'CardioMaster') ON CONFLICT (id) DO NOTHING;
+INSERT INTO training_type (id, training_type_name) VALUES (3, 'StrengthExpert') ON CONFLICT (id) DO NOTHING;
 
 -- Insert into trainer
 INSERT INTO trainer (id, training_type, user_id) VALUES (1, 1, 1) ON CONFLICT (id) DO NOTHING;
@@ -30,12 +30,31 @@ INSERT INTO trainee (id, date_of_birth, address, user_id)
 VALUES (2, DATE '1998-11-22', '456 Oak Ave', 6) ON CONFLICT (id) DO NOTHING;
 
 -- Insert into training
-INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date, training_duration)
-VALUES (1, 1, 1, 'Morning Yoga', 1, DATE '2025-06-01', 60) ON CONFLICT (id) DO NOTHING;
-INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date, training_duration)
-VALUES (2, 2, 2, 'Evening Cardio', 2, DATE '2025-06-02', 45) ON CONFLICT (id) DO NOTHING;
-INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date, training_duration)
-VALUES (3, 2, 3, 'Strength Training', 3, DATE '2025-06-03', 90) ON CONFLICT (id) DO NOTHING;
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (1, 1, 1, 'Morning Yoga', 1, TIMESTAMP '2025-06-01 08:00:00', 60, 'SCHEDULED')
+    ON CONFLICT (id) DO NOTHING;
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (2, 1, 1, 'Yoga', 2, TIMESTAMP '2025-06-05 10:00:00', 60, 'CANCELED')
+    ON CONFLICT (id) DO NOTHING;
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (3, 1, 1, 'Upper day', 3, TIMESTAMP '2025-06-01 08:00:00', 60, 'IN_REVIEW')
+    ON CONFLICT (id) DO NOTHING;
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (4, 1, 1, 'Anterior day', 3, TIMESTAMP '2026-01-12 12:00:00', 80, 'SCHEDULED')
+    ON CONFLICT (id) DO NOTHING;
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (5, 1, 1, 'Posterior day', 3, TIMESTAMP '2026-01-12 14:20:00', 80, 'SCHEDULED')
+    ON CONFLICT (id) DO NOTHING;
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (6, 1, 1, 'Fullbody day', 3, TIMESTAMP '2026-01-11 11:30:00', 40, 'SCHEDULED')
+    ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (7, 2, 2, 'Evening Cardio', 2, TIMESTAMP '2025-06-02 18:00:00', 45, 'IN_REVIEW')
+    ON CONFLICT (id) DO NOTHING;
+INSERT INTO training (id, trainee_id, trainer_id, training_name, training_type, training_date_time, training_duration, status)
+VALUES (8, 2, 3, 'Strength Training', 3, TIMESTAMP '2025-06-03 10:30:00', 90, 'COMPLETED')
+    ON CONFLICT (id) DO NOTHING;
 
 -- Insert into join table trainee_trainer
 INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES (1, 1) ON CONFLICT DO NOTHING;

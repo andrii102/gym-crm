@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -31,23 +31,28 @@ public class Training {
     TrainingType trainingType;
 
     @Column(nullable = false)
-    LocalDate trainingDate;
+    LocalDateTime trainingDateTime;
 
     @Column(nullable = false)
     Integer trainingDuration;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    TrainingStatus status;
 
     public Training() {
 
     }
 
     public Training(Trainee trainee, Trainer trainer, String trainingName,
-                    TrainingType trainingType, LocalDate trainingDate, Integer trainingDuration) {
+                    TrainingType trainingType, LocalDateTime trainingDateTime, Integer trainingDuration, TrainingStatus status) {
         this.trainee = trainee;
         this.trainer = trainer;
         this.trainingName = trainingName;
         this.trainingType = trainingType;
-        this.trainingDate = trainingDate;
+        this.trainingDateTime = trainingDateTime;
         this.trainingDuration = trainingDuration;
+        this.status = status;
     }
 
     @Override
@@ -58,8 +63,9 @@ public class Training {
                 ", trainer=" + trainer +
                 ", trainingName='" + trainingName + '\'' +
                 ", trainingType=" + trainingType +
-                ", trainingDate=" + trainingDate +
+                ", trainingDate=" + trainingDateTime +
                 ", trainingDuration=" + trainingDuration +
+                ", status=" + status +
                 '}';
     }
 }

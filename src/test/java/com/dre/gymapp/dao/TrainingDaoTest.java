@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,7 +37,7 @@ public class TrainingDaoTest {
     private static final String TEST_TRAINER_USERNAME = "trainer.user";
     private static final String TEST_TRAINING_NAME = "Test Training";
     private static final String TRAINING_TYPE = "CARDIO";
-    private static final LocalDate TEST_DATE = LocalDate.of(2025, 1, 1);
+    private static final LocalDateTime TEST_DATETIME = LocalDateTime.of(2025, 1, 1, 10, 0);
     private static final Integer TEST_DURATION = 60;
     private static final Long NON_EXISTENT_ID = 9999L;
 
@@ -64,7 +64,7 @@ public class TrainingDaoTest {
         entityManager.persist(testTrainee);
 
         testTraining = new Training(testTrainee, testTrainer, TEST_TRAINING_NAME,
-                testTrainingType, TEST_DATE, TEST_DURATION);
+                testTrainingType, TEST_DATETIME, TEST_DURATION, TrainingStatus.SCHEDULED);
         entityManager.persist(testTraining);
 
         entityManager.flush();
@@ -92,7 +92,7 @@ public class TrainingDaoTest {
     @Test
     public void save_ShouldPersistNewTraining() {
         Training training = new Training(testTrainee, testTrainer, "Save Test Training",
-                testTrainingType, TEST_DATE, TEST_DURATION);
+                testTrainingType, TEST_DATETIME, TEST_DURATION, TrainingStatus.SCHEDULED);
         trainingDao.save(training);
         entityManager.flush();
         entityManager.clear();
@@ -109,7 +109,7 @@ public class TrainingDaoTest {
     @Test
     public void findTrainingsByParams_WithAllParams_ShouldReturnList(){
         List<Training> trainings = trainingDao.findTrainingsByParams(testUserTrainer.getUsername(), testUserTrainee.getUsername(),
-                TEST_DATE.minusDays(7), TEST_DATE.plusDays(7), TRAINING_TYPE);
+                TEST_DATETIME.minusDays(7), TEST_DATETIME.plusDays(7), TRAINING_TYPE, TrainingStatus.SCHEDULED, 1);
 
         assertFalse(trainings.isEmpty());
         assertEquals(1, trainings.size());
@@ -118,7 +118,7 @@ public class TrainingDaoTest {
 
     @Test
     public void findTrainingsByParams_WithNoParams_ShouldReturnList(){
-        List<Training> trainings = trainingDao.findTrainingsByParams(null, null, null, null, null);
+        List<Training> trainings = trainingDao.findTrainingsByParams(null, null, null, null, null, null, null);
 
         assertFalse(trainings.isEmpty());
     }
@@ -126,7 +126,7 @@ public class TrainingDaoTest {
     @Test
     public void findTrainingsByParams_WithNoMatchingParams_ShouldReturnEmptyList(){
         List<Training> trainings = trainingDao.findTrainingsByParams("nonexisting.user", "nonexisting.user",
-                TEST_DATE.minusDays(7), TEST_DATE.plusDays(7), TRAINING_TYPE);
+                TEST_DATETIME.minusDays(7), TEST_DATETIME.plusDays(7), TRAINING_TYPE, null, null);
 
         assertTrue(trainings.isEmpty());
     }

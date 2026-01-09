@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,7 +62,7 @@ public class TrainingServiceTest {
         trainer.setUser(trainerUser);
 
         NewTrainingRequest request = new NewTrainingRequest("trainee.user", "trainer.user",
-                testTraining.getTrainingName(), null, null);
+                testTraining.getTrainingName(), LocalDateTime.of(2025, 1, 1, 1, 1), null, TrainingStatus.SCHEDULED);
 
         when(traineeDao.findByUsername(any())).thenReturn(Optional.of(trainee));
         when(trainerDao.findByUsername(any())).thenReturn(Optional.of(trainer));
@@ -107,15 +108,15 @@ public class TrainingServiceTest {
     public void getTrainerTrainings_ShouldReturnTrainingsByParams(){
         List<Training> trainings = List.of(testTraining, testTraining);
 
-        when(trainingDao.findTrainingsByParams(any(),any(),any(),any(),any())).thenReturn(trainings);
+        when(trainingDao.findTrainingsByParams(any(),any(),any(),any(),any(), any(), any())).thenReturn(trainings);
 
         List<Training> result = trainingService.getTrainingsByParams("trainer", "trainee",
-                null, null, "first training");
+                null, null, "first training", null, null);
 
         assertNotNull(result);
         assertEquals(2, result.size());
 
-        verify(trainingDao).findTrainingsByParams(any(),any(),any(),any(),any());
+        verify(trainingDao).findTrainingsByParams(any(),any(),any(),any(),any(), any(), any());
     }
 
     @Test

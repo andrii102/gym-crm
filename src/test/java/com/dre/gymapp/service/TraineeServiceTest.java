@@ -20,7 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -245,20 +245,20 @@ public class TraineeServiceTest {
         Trainer trainer = new Trainer();
         trainer.setUser(trainerUser);
         Training training = new Training(trainee, trainer, "Training Name",
-                new TrainingType("RUNNING"), LocalDate.of(2025, 1, 1), 60);
+                new TrainingType("RUNNING"), LocalDateTime.of(2025, 1, 1, 10, 1), 60, TrainingStatus.SCHEDULED);
         trainee.setTrainings(List.of(training));
 
         TraineeTrainingsRequest request = new TraineeTrainingsRequest();
 
 
-        when(trainingService.getTrainingsByParams(any(), any(), any(), any(), any())).thenReturn(List.of(training));
+        when(trainingService.getTrainingsByParams(any(), any(), any(), any(), any(), any(), any())).thenReturn(List.of(training));
 
         List<TraineeTrainingsResponse> result = traineeService.getTraineeTrainings(trainee.getUser().getUsername(), request);
 
         assertNotNull(result);
         assertEquals(trainee.getTrainings().size(), result.size());
 
-        verify(trainingService).getTrainingsByParams(any(), any(), any(), any(), any());
+        verify(trainingService).getTrainingsByParams(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

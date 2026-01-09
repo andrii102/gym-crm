@@ -16,8 +16,9 @@ Feature: Trainings Management
       | traineeUsername | test.trainee |
       | trainerUsername | test.trainer |
       | trainingName    | Cardio       |
-      | trainingDate    | 2025-12-01   |
+      | trainingDateTime| 2025-12-01T12:00:00|
       | trainingDuration| 60             |
+      | status          | IN_REVIEW      |
     Then the training response status should be 200
     And the training service create method should be called
 

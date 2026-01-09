@@ -37,6 +37,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(request -> request
                     .requestMatchers("/api/auth/login", "/api/auth/trainee", "/api/auth/trainer", "/api/auth/refresh"
                             ,"/actuator/**", "/swagger-ui.html","/swagger-ui/**",  "/v3/api-docs/**").permitAll()
+                    .requestMatchers("/api/auth/trainee/admin-create").hasRole("ADMIN")
                     .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class);
@@ -58,9 +59,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedOrigins(List.of("http://localhost:8081"));
+        config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

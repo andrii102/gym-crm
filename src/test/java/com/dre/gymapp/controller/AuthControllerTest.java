@@ -50,7 +50,7 @@ public class AuthControllerTest {
 
         when(traineeService.createTrainee(request)).thenReturn(expectedResponse);
 
-        RegistrationResponse response = authController.registerTrainee(request).getBody();
+        RegistrationResponse response = authController.registerTraineeAdmin(request).getBody();
 
         assertNotNull(response);
         assertEquals(expectedResponse.getUsername(), response.getUsername());

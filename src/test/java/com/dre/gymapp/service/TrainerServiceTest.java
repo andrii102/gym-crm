@@ -22,7 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -270,13 +270,13 @@ public class TrainerServiceTest {
 
         Training training = new Training();
         training.setTrainingName("Morning Cardio");
-        training.setTrainingDate(LocalDate.of(2024, 1, 1));
+        training.setTrainingDateTime(LocalDateTime.of(2024, 1, 1, 10, 0));
         training.setTrainingDuration(60);
         training.setTrainingType(type);
         training.setTrainee(trainee);
 
         when(trainingService.getTrainingsByParams(
-                        testUser.getUsername(), "trainee", null, null, null))
+                        testUser.getUsername(), "trainee", null, null, null, null, null))
                 .thenReturn(List.of(training));
 
         List<TrainerTrainingsResponse> result =

@@ -7,7 +7,7 @@ Feature: Registration
   @registration
   Scenario: A new user successfully registers as a trainee
     Given the trainee service is ready to register a new user
-    When a user sends a POST request to "/api/auth/trainee" with:
+    When a user sends a POST request to "/api/auth/trainee/admin-create" with:
       | firstName   | "Test"     |
       | lastName    | "Trainee"  |
       | address     | "123 Main St" |
@@ -29,7 +29,7 @@ Feature: Registration
   @NegativeCase
   @registration
   Scenario Outline: Attempts to register a trainee with missing required fields
-    When a user sends a POST request to "/api/auth/trainee" with:
+    When a user sends a POST request to "/api/auth/trainee/admin-create" with:
       | firstName   | <firstName>   |
       | lastName    | <lastName>    |
       | address     | <address>     |

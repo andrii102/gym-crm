@@ -1,5 +1,6 @@
 package com.dre.gymapp.dto.trainings;
 
+import com.dre.gymapp.model.TrainingStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -26,11 +27,15 @@ public class NewTrainingRequest {
     @NotBlank(message = "Training name cannot be blank")
     private String trainingName;
 
-    @Schema(description = "Date when the training session will take place")
-    @NotNull(message = "Training date cannot be null")
-    private LocalDate trainingDate;
+    @Schema(description = "DateTime when the training session will take place")
+    @NotNull(message = "Training DateTime cannot be null")
+    private LocalDateTime trainingDateTime;
 
     @Schema(description = "Duration of the training session in minutes")
     @NotNull(message = "Training duration cannot be null")
     private Integer trainingDuration;
+
+    @Schema(description = "Status of the training session")
+    @NotNull(message = "Training status cannot be null")
+    private TrainingStatus status;
 }

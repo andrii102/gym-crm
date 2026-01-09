@@ -172,14 +172,16 @@ public class TrainerService {
     public List<TrainerTrainingsResponse> getTrainerTrainings(String username, TrainerTrainingsRequest request) {
         logger.info("Getting trainer trainings for trainer with username: {}", username);
         List<Training> trainings = trainingService.getTrainingsByParams(username, request.getTraineeUsername(),
-                request.getPeriodFrom(), request.getPeriodTo(), null);
+                request.getPeriodFrom(), request.getPeriodTo(), null, request.getTrainingStatus(), request.getLimit());
         List<TrainerTrainingsResponse> dto = trainings.stream()
                 .map(training -> new TrainerTrainingsResponse(
+                        training.getId(),
                         training.getTrainingName(),
-                        training.getTrainingDate(),
+                        training.getTrainingDateTime(),
                         training.getTrainingType().getTrainingTypeName(),
                         training.getTrainingDuration(),
-                        training.getTrainee().getUser().getUsername()
+                        training.getTrainee().getUser().getUsername(),
+                        training.getStatus()
                 )).toList();
 
         logger.info("Trainer trainings retrieved successfully");

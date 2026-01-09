@@ -1,7 +1,9 @@
 package com.dre.gymapp.controller;
 
 import com.dre.gymapp.dto.trainings.NewTrainingRequest;
+import com.dre.gymapp.dto.trainings.TrainingResponse;
 import com.dre.gymapp.dto.trainings.TrainingTypeResponse;
+import com.dre.gymapp.dto.trainings.TrainingUpdateRequest;
 import com.dre.gymapp.service.TrainingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -40,6 +42,31 @@ public class TrainingController {
             @Parameter(description = "Training request body") @RequestBody @Valid NewTrainingRequest request) {
         trainingService.createTraining(request);
         return ResponseEntity.ok("Training added successfully");
+    }
+
+    @Operation(summary = "Get training by ID", description = "Returns training details for the given training ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Training details retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = TrainingResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Training not found", content = @Content)
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<TrainingResponse> getTrainingById(@PathVariable("id") Long id) {
+        TrainingResponse response = trainingService.getTrainingDetailsById(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Operation(summary = "Update training", description = "Updates existing training")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Training updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Training not found", content = @Content)
+    })
+    @PatchMapping("/{id}")
+    public ResponseEntity<String> updateTrainingStatus(
+            @Parameter(description = "ID of the training to update") @PathVariable("id") Long id,
+            @Parameter(description = "Request body with fields to update") @RequestBody TrainingUpdateRequest request) {
+        trainingService.updateTrainingStatus(id, request);
+        return ResponseEntity.ok("Training status updated successfully");
     }
 
     @Operation(summary = "Get all training types", description = "Returns a list of all training types")

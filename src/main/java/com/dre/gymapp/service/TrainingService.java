@@ -4,21 +4,17 @@ import com.dre.gymapp.dao.TraineeDao;
 import com.dre.gymapp.dao.TrainerDao;
 import com.dre.gymapp.dao.TrainingDao;
 import com.dre.gymapp.dao.TrainingTypeDao;
-import com.dre.gymapp.dto.trainings.NewTrainingRequest;
-import com.dre.gymapp.dto.trainings.TrainingEventRequest;
-import com.dre.gymapp.dto.trainings.TrainingTypeResponse;
+import com.dre.gymapp.dto.trainings.*;
 import com.dre.gymapp.exception.NotFoundException;
-import com.dre.gymapp.model.Trainee;
-import com.dre.gymapp.model.Trainer;
-import com.dre.gymapp.model.Training;
-import com.dre.gymapp.model.TrainingType;
+import com.dre.gymapp.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TrainingService {
@@ -48,7 +44,7 @@ public class TrainingService {
         Trainer trainer = trainerDao.findByUsername(request.getTrainerUsername()).orElseThrow(() -> new NotFoundException("Trainer not found"));
 
         Training training = new Training(trainee, trainer, request.getTrainingName(),
-                trainer.getSpecialization(), request.getTrainingDate(), request.getTrainingDuration());
+                trainer.getSpecialization(), request.getTrainingDateTime(), request.getTrainingDuration(), request.getStatus());
         trainingDao.save(training);
 
         TrainingEventRequest workloadRequest = new TrainingEventRequest(
@@ -56,7 +52,7 @@ public class TrainingService {
                 trainer.getUser().getFirstName(),
                 trainer.getUser().getLastName(),
                 trainer.getUser().isActive(),
-                training.getTrainingDate(),
+                training.getTrainingDateTime().toLocalDate(),
                 training.getTrainingDuration(),
                 "ADD"
         );
@@ -76,6 +72,25 @@ public class TrainingService {
         }
     }
 
+    // Gets training details and maps to TrainingResponse DTO
+    public TrainingResponse getTrainingDetailsById(Long id) {
+        Optional<Training> training = trainingDao.findById(id);
+        if (training.isEmpty()) {
+            throw new NotFoundException("Training not found");
+        }
+
+        return new TrainingResponse(
+                training.get().getId(),
+                training.get().getTrainingName(),
+                training.get().getTrainingDateTime(),
+                training.get().getTrainingType().getTrainingTypeName(),
+                training.get().getTrainingDuration(),
+                training.get().getTrainee().getUser().getUsername(),
+                training.get().getTrainer().getUser().getUsername(),
+                training.get().getStatus()
+        );
+    }
+
     // Gets a list of all trainings
     public List<Training> getAllTrainings() {
         logger.info("Getting all trainings");
@@ -93,10 +108,10 @@ public class TrainingService {
     }
 
     // Returns list of trainings by parameters
-    public List<Training> getTrainingsByParams(String trainerUsername, String traineeUsername, LocalDate fromDate,
-                                               LocalDate toDate, String trainingTypeName) {
+    public List<Training> getTrainingsByParams(String trainerUsername, String traineeUsername, LocalDateTime fromDateTime,
+                                               LocalDateTime toDateTime, String trainingTypeName, TrainingStatus trainingStatus, Integer limit) {
         logger.info("Getting training by params");
-        return trainingDao.findTrainingsByParams(trainerUsername, traineeUsername, fromDate, toDate, trainingTypeName);
+        return trainingDao.findTrainingsByParams(trainerUsername, traineeUsername, fromDateTime, toDateTime, trainingTypeName, trainingStatus, limit);
     }
 
     // Remove trainings in trainer-workload-service
@@ -107,12 +122,27 @@ public class TrainingService {
                     training.getTrainer().getUser().getFirstName(),
                     training.getTrainer().getUser().getLastName(),
                     training.getTrainer().getUser().isActive(),
-                    training.getTrainingDate(),
+                    training.getTrainingDateTime().toLocalDate(),
                     training.getTrainingDuration(),
                     "DELETE"
             );
             jmsTemplate.convertAndSend("trainings.queue", workloadRequest);
         }
+    }
+
+    public void updateTrainingStatus(Long id, TrainingUpdateRequest updateRequest) {
+        Training training = trainingDao.findById(id).orElseThrow(() -> new NotFoundException("Training not found"));
+
+        if (updateRequest.getStatus() != null) {
+            try {
+                training.setStatus(updateRequest.getStatus());
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid training status: {}", updateRequest.getStatus());
+                throw new IllegalArgumentException("Invalid training status: " + updateRequest.getStatus());
+            }
+        }
+
+        trainingDao.update(training);
     }
 }
 
